@@ -20,10 +20,12 @@
 * 支持时间显示，默认大于一分钟显示一次，具体规则参见ChatAdapter类。可根据需求修改。
 
 ##详细说明
+
 ###主要：
 * ChatActivity:聊天界面
 * ChatAdapter:聊天界面适配器
 * ChatBean:聊天数据对象
+
 ###其他
 * ImageViewActivity:大图观看界面
 * AudioRecordButton：自定义录音控件
