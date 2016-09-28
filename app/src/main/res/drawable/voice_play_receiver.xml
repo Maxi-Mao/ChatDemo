@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animation-list xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <item
+        android:drawable="@mipmap/receiver_voice_node_playing000"
+        android:duration="300">
+    </item>
+    
+    <item
+        android:drawable="@mipmap/receiver_voice_node_playing001"
+        android:duration="300">
+    </item>
+    
+    <item
+        android:drawable="@mipmap/receiver_voice_node_playing002"
+        android:duration="300">
+    </item>
+    
+    <item
+        android:drawable="@mipmap/receiver_voice_node_playing003"
+        android:duration="300">
+    </item>
+
+</animation-list>

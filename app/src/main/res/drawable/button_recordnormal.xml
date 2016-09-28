@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <solid android:color="#ffffff" /> <!-- 背景色solid -->
+    <stroke
+        android:width="1px"
+        android:color="#9b9b9b" /> <!-- 边框设置 -->
+    <corners android:radius="3dp" /> <!-- 转角 -->
+
+</shape>
