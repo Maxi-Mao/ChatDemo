@@ -25,7 +25,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.maxi.chatdemo.R;
-import com.maxi.chatdemo.entity.TongBaoUserBean;
+import com.maxi.chatdemo.entity.ChatBean;
 import com.maxi.chatdemo.ui.ImageViewActivity;
 import com.maxi.chatdemo.utils.FileSaveUtil;
 import com.maxi.chatdemo.widget.BubbleImageView;
@@ -50,7 +50,7 @@ import java.util.List;
  */
 public class ChatAdapter extends BaseAdapter {
     private Context context;
-    private List<TongBaoUserBean> userList = new ArrayList<TongBaoUserBean>();
+    private List<ChatBean> userList = new ArrayList<ChatBean>();
     public static int FROM_USER = 0;//接收消息类型
     public static int TO_USER = 1;//发送消息类型
     public static int TEXT_MSG = 0;//文字表情消息
@@ -117,7 +117,7 @@ public class ChatAdapter extends BaseAdapter {
         this.isGif = isGif;
     }
 
-    public void setUserList(List<TongBaoUserBean> userList) {
+    public void setUserList(List<ChatBean> userList) {
         this.userList = userList;
     }
 
@@ -205,7 +205,7 @@ public class ChatAdapter extends BaseAdapter {
         } else {
             holder = (ViewHolder) view.getTag();
         }
-        final TongBaoUserBean tbub = userList.get(i);
+        final ChatBean tbub = userList.get(i);
         /* headimage */
         if (itemViewType == FROM_USER) {
             holder.headicon.setBackgroundResource(R.mipmap.tongbao_hiv);

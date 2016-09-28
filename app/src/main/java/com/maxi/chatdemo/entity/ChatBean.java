@@ -2,7 +2,7 @@ package com.maxi.chatdemo.entity;
 
 import java.io.Serializable;
 
-public class TongBaoUserBean implements Serializable {
+public class ChatBean implements Serializable {
 
     /**
      *

@@ -29,8 +29,8 @@ import com.maxi.chatdemo.adapter.ChatAdapter;
 import com.maxi.chatdemo.adapter.DataAdapter;
 import com.maxi.chatdemo.adapter.ExpressionAdapter;
 import com.maxi.chatdemo.adapter.ExpressionPagerAdapter;
-import com.maxi.chatdemo.entity.TongBaoUserBean;
-import com.maxi.chatdemo.entity.TongBaoUserBean.SendState;
+import com.maxi.chatdemo.entity.ChatBean;
+import com.maxi.chatdemo.entity.ChatBean.SendState;
 import com.maxi.chatdemo.utils.FileSaveUtil;
 import com.maxi.chatdemo.utils.ImageCheckoutUtil;
 import com.maxi.chatdemo.utils.KeyBoardUtils;
@@ -40,6 +40,7 @@ import com.maxi.chatdemo.widget.AudioRecordButton;
 import com.maxi.chatdemo.widget.ChatBottomView;
 import com.maxi.chatdemo.widget.ExpandGridView;
 import com.maxi.chatdemo.widget.HeadIconSelectorView;
+import com.maxi.chatdemo.widget.MediaManager;
 import com.maxi.chatdemo.widget.pulltorefresh.PullToRefreshLayout;
 import com.maxi.chatdemo.widget.pulltorefresh.PullToRefreshListView;
 
@@ -79,7 +80,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnLayoutChan
     private String camPicPath;
     private String item[] = {"你好!", "我正忙着呢,等等", "有啥事吗？", "有时间聊聊吗", "再见！"};
 
-    private List<TongBaoUserBean> tblist = new ArrayList<TongBaoUserBean>();
+    private List<ChatBean> tblist = new ArrayList<ChatBean>();
     private List<String> reslist;
     private static final int IMAGE_SIZE = 100 * 1024;// 300kb
     private static final int SEND_OK = 0x1110;
@@ -117,6 +118,18 @@ public class ChatActivity extends AppCompatActivity implements View.OnLayoutChan
         super.onResume();
         // 添加layout大小发生改变监听器
         activityRootView.addOnLayoutChangeListener(this);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        MediaManager.pause();
+        MediaManager.release();
+        tblist.clear();
+        tbAdapter.notifyDataSetChanged();
+        myList.setAdapter(null);
+        handler.removeCallbacksAndMessages(null);
+        sendMessageHandler.removeCallbacksAndMessages(null);
     }
 
     @SuppressLint({"NewApi", "InflateParams"})
@@ -162,7 +175,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnLayoutChan
             @Override
             public void onClick(int position) {
                 // TODO Auto-generated method stub
-                TongBaoUserBean tbub = tblist.get(position);
+                ChatBean tbub = tblist.get(position);
                 if (tbub.getMessagetype() == ChatAdapter.VOICE_MSG) {
                     upVoice(tbub.getUserVoiceTime(), tbub.getUserVoicePath());
                     tblist.remove(position);
@@ -750,7 +763,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnLayoutChan
 
     private void receriveMsgText(String content) {
         content = "回复：" + content;
-        TongBaoUserBean tbub = new TongBaoUserBean();
+        ChatBean tbub = new ChatBean();
         tbub.setUserName(userName);
         String time = returnTime();
         tbub.setMessagetype(ChatAdapter.TEXT_MSG);
@@ -765,24 +778,25 @@ public class ChatActivity extends AppCompatActivity implements View.OnLayoutChan
      * 发送图片
      */
     int i = 0;
+
     private void upImage(String filePath) {
-        if(i == 0) {
+        if (i == 0) {
             tblist.add(getTbub(userName, ChatAdapter.TO_USER,
                     ChatAdapter.IMG_MSG, null, null, null, filePath, null, null,
                     0f, SendState.SENDING));
-        }else if(i == 1){
+        } else if (i == 1) {
             tblist.add(getTbub(userName, ChatAdapter.TO_USER,
                     ChatAdapter.IMG_MSG, null, null, null, filePath, null, null,
                     0f, SendState.SENDERROR));
-        }else if(i == 2){
+        } else if (i == 2) {
             tblist.add(getTbub(userName, ChatAdapter.TO_USER,
                     ChatAdapter.IMG_MSG, null, null, null, filePath, null, null,
                     0f, SendState.COMPLETED));
             i = -1;
         }
-            sendMessageHandler.sendEmptyMessage(SEND_OK);
-            this.filePath = filePath;
-            receriveHandler.sendEmptyMessageDelayed(1, 3000);
+        sendMessageHandler.sendEmptyMessage(SEND_OK);
+        this.filePath = filePath;
+        receriveHandler.sendEmptyMessageDelayed(1, 3000);
         i++;
     }
 
@@ -790,8 +804,9 @@ public class ChatActivity extends AppCompatActivity implements View.OnLayoutChan
      * 接收图片
      */
     String filePath = "";
+
     private void receriveImageText(String filePath) {
-        TongBaoUserBean tbub = new TongBaoUserBean();
+        ChatBean tbub = new ChatBean();
         tbub.setUserName(userName);
         String time = returnTime();
         tbub.setTime(time);
@@ -820,8 +835,9 @@ public class ChatActivity extends AppCompatActivity implements View.OnLayoutChan
      */
     float seconds = 0.0f;
     String voiceFilePath = "";
+
     private void receriveVoiceText(float seconds, String filePath) {
-        TongBaoUserBean tbub = new TongBaoUserBean();
+        ChatBean tbub = new ChatBean();
         tbub.setUserName(userName);
         String time = returnTime();
         tbub.setTime(time);
@@ -857,11 +873,11 @@ public class ChatActivity extends AppCompatActivity implements View.OnLayoutChan
         }
     };
 
-    private TongBaoUserBean getTbub(String username, int type, int MsgType,
-                                    String Content, String imageIconUrl, String imageUrl,
-                                    String imageLocal, String userVoicePath, String userVoiceUrl,
-                                    Float userVoiceTime, TongBaoUserBean.SendState sendState) {
-        TongBaoUserBean tbub = new TongBaoUserBean();
+    private ChatBean getTbub(String username, int type, int MsgType,
+                             String Content, String imageIconUrl, String imageUrl,
+                             String imageLocal, String userVoicePath, String userVoiceUrl,
+                             Float userVoiceTime, ChatBean.SendState sendState) {
+        ChatBean tbub = new ChatBean();
         tbub.setUserName(username);
         String time = returnTime();
         tbub.setTime(time);
