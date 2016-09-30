@@ -56,9 +56,6 @@ public class ChatRecyclerAdapter extends
     public static final int TO_USER_IMG = 3;//发送消息类型
     public static final int FROM_USER_VOICE = 4;//接收消息类型
     public static final int TO_USER_VOICE = 5;//发送消息类型
-    //    public static final int TEXT_MSG = 0;//文字表情消息
-//    public static final int VOICE_MSG = 1;//语音消息
-//    public static final int IMG_MSG = 2;//图片消息
     private int mMinItemWith;// 设置对话框的最大宽度和最小宽度
     private int mMaxItemWith;
     public Handler handler;
@@ -268,11 +265,6 @@ public class ChatRecyclerAdapter extends
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         ChatBean tbub = userList.get(position);
         int itemViewType = getItemViewType(position);
-//        if (itemViewType == FROM_USER) {
-//            fromUserLayout((FromUserViewHolder) holder, tbub, position);
-//        } else {
-//            toUserLayout((ToUserViewHolder) holder, tbub, position);
-//        }
         switch (itemViewType) {
             case FROM_USER_MSG:
                 fromMsgUserLayout((FromUserMsgViewHolder) holder, tbub, position);

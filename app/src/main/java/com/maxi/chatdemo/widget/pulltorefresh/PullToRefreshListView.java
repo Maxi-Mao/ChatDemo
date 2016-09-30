@@ -14,9 +14,11 @@ public class PullToRefreshListView extends RecyclerView {
     boolean allowDragBottom = true;
     float downY = 0;
     boolean needConsumeTouch = true;
-    public PullToRefreshListView(Context context){
+
+    public PullToRefreshListView(Context context) {
         super(context);
     }
+
     public PullToRefreshListView(Context context, AttributeSet attrs) {
         super(context, attrs);
         // TODO Auto-generated constructor stub
@@ -53,8 +55,9 @@ public class PullToRefreshListView extends RecyclerView {
         if (c == null) {
             return 0;
         }
-        int firstVisiblePosition =  ((LinearLayoutManager)getLayoutManager()).findFirstVisibleItemPosition();
+        int firstVisiblePosition = ((LinearLayoutManager) getLayoutManager()).findFirstVisibleItemPosition();
         int top = c.getTop();
         return -top + firstVisiblePosition * c.getHeight();
     }
+
 }

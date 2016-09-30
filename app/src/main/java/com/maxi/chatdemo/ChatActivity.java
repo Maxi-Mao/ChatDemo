@@ -3,6 +3,7 @@ package com.maxi.chatdemo;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -18,6 +19,7 @@ import android.text.Spannable;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -63,7 +65,7 @@ public class ChatActivity extends AppCompatActivity {
     private ListView mess_lv;
     private PullToRefreshListView myList;
     private ChatRecyclerAdapter tbAdapter;
-
+    private WrapContentLinearLayoutManager wcLinearLayoutManger;
     private DataAdapter adapter;
     private AudioRecordButton voiceBtn;
     private EditText mEditTextContent;
@@ -76,13 +78,11 @@ public class ChatActivity extends AppCompatActivity {
     private SendMessageHandler sendMessageHandler;
     private File mCurrentPhotoFile;
     private ChatBottomView tbbv;
-    //    private View activityRootView;
+    private View activityRootView;
     private Toast mToast;
-    private int screenHeight = 0;
-    private int keyHeight = 0;
+    private int listSlideHeight = 0;//滑动距离
     private String camPicPath;
     private String item[] = {"你好!", "我正忙着呢,等等", "有啥事吗？", "有时间聊聊吗", "再见！"};
-
     private List<ChatBean> tblist = new ArrayList<ChatBean>();
     private List<String> reslist;
     private static final int IMAGE_SIZE = 100 * 1024;// 300kb
@@ -103,7 +103,7 @@ public class ChatActivity extends AppCompatActivity {
         pullList = (PullToRefreshLayout) findViewById(R.id.content_lv);
         assert pullList != null;
         myList = pullList.returnMylist();
-//        activityRootView = findViewById(R.id.layout_tongbao_rl);
+        activityRootView = findViewById(R.id.layout_tongbao_rl);
         mEditTextContent = (EditText) findViewById(R.id.mess_et);
         mess_iv = (ImageView) findViewById(R.id.mess_iv);
         emoji = (ImageView) findViewById(R.id.emoji);
@@ -119,8 +119,6 @@ public class ChatActivity extends AppCompatActivity {
     protected void onResume() {
         // TODO Auto-generated method stub
         super.onResume();
-        // 添加layout大小发生改变监听器
-//        activityRootView.addOnLayoutChangeListener(this);
     }
 
     @SuppressLint({"NewApi", "InflateParams"})
@@ -151,14 +149,10 @@ public class ChatActivity extends AppCompatActivity {
         };
         pullList.setpulltorefreshNotifier(pullNotifier);
         tbAdapter = new ChatRecyclerAdapter(this, tblist);
-        myList.setLayoutManager(new WrapContentLinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+        wcLinearLayoutManger = new WrapContentLinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+        myList.setLayoutManager(wcLinearLayoutManger);
         myList.setItemAnimator(new SlideInOutBottomItemAnimator(myList));
         myList.setAdapter(tbAdapter);
-
-        // 获取屏幕高度
-        screenHeight = this.getWindowManager().getDefaultDisplay().getHeight();
-        // 阀值设置为屏幕高度的1/3
-        keyHeight = screenHeight / 4;
         sendMessageHandler = new SendMessageHandler(this);
         tbAdapter.isPicRefresh = true;
         tbAdapter.notifyDataSetChanged();
@@ -403,6 +397,48 @@ public class ChatActivity extends AppCompatActivity {
                 super.onScrolled(recyclerView, dx, dy);
             }
         });
+        controlKeyboardLayout(activityRootView, pullList);
+    }
+
+    /**
+     * @param root             最外层布局
+     * @param needToScrollView 要滚动的布局,就是说在键盘弹出的时候,你需要试图滚动上去的View,在键盘隐藏的时候,他又会滚动到原来的位置的布局
+     */
+    private void controlKeyboardLayout(final View root, final View needToScrollView) {
+        root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+
+            private Rect r = new Rect();
+
+            @Override
+            public void onGlobalLayout() {
+                //获取当前界面可视部分
+                ChatActivity.this.getWindow().getDecorView().getWindowVisibleDisplayFrame(r);
+                //获取屏幕的高度
+                int screenHeight = ChatActivity.this.getWindow().getDecorView().getRootView().getHeight();
+                //此处就是用来获取键盘的高度的， 在键盘没有弹出的时候 此高度为0 键盘弹出的时候为一个正数
+                int heightDifference = screenHeight - r.bottom;
+                int recyclerHeight = 0;
+                if (wcLinearLayoutManger != null) {
+                    recyclerHeight = wcLinearLayoutManger.getRecyclerHeight();
+                }
+                if (heightDifference == 0) {
+                    needToScrollView.scrollTo(0, 0);
+                } else {
+                    if (heightDifference < recyclerHeight) {
+                        int contentHeight = wcLinearLayoutManger == null ? 0 : wcLinearLayoutManger.getHeight();
+                        if (recyclerHeight < contentHeight) {
+                            listSlideHeight = heightDifference - (contentHeight - recyclerHeight);
+                            needToScrollView.scrollTo(0, listSlideHeight);
+                        } else {
+                            listSlideHeight = heightDifference;
+                            needToScrollView.scrollTo(0, listSlideHeight);
+                        }
+                    } else {
+                        listSlideHeight = 0;
+                    }
+                }
+            }
+        });
     }
 
     private void downLoad() {
@@ -528,15 +564,6 @@ public class ChatActivity extends AppCompatActivity {
         return dir + fileName;
     }
 
-    //    @Override
-//    public void onLayoutChange(View v, int left, int top, int right,
-//                               int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
-//        // TODO Auto-generated method stub
-//        if (oldBottom != 0 && bottom != 0 && (oldBottom - bottom > keyHeight)) {
-//            reset();
-//        }
-//    }
-//
     private void reset() {
         emoji_group.setVisibility(View.GONE);
         tbbv.setVisibility(View.GONE);
