@@ -24,6 +24,7 @@
 ###主要：
 * ChatActivity:聊天界面
 * ChatAdapter:聊天界面适配器
+* ChatRecyclerAdapter:RecyclerView聊天界面适配器
 * ChatBean:聊天数据对象
 
 ###其他
@@ -33,6 +34,7 @@
 * MediaManager：语音播放控件
 * GifTextView：自定义图文混排控件
 * pulltorefresh类：自定义下拉加载更多控件（仅支持下拉加载更多）
+* SlideInOutBottomItemAnimator:RecyclerView添加item动画（上滑）
 
 图片加载使用Glide。
 
