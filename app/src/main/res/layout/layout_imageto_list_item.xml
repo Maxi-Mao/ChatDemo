@@ -28,14 +28,27 @@
         android:layout_toLeftOf="@+id/tb_my_user_icon"
         android:orientation="horizontal">
 
-        <com.maxi.chatdemo.widget.GifTextView
-            android:id="@+id/mycontent"
+        <ImageView
+            android:id="@+id/mysend_fail_img"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_gravity="center_vertical"
+            android:background="@mipmap/msg_state_fail_resend_pressed" />
+
+        <LinearLayout
+            android:id="@+id/image_group"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="5dp"
-            android:background="@drawable/chatto_bg_focused"
-            android:textColor="@color/white"
-            android:textSize="16sp" />
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <com.maxi.chatdemo.widget.BubbleImageView
+                android:id="@+id/image_message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:scaleType="centerCrop" />
+        </LinearLayout>
     </LinearLayout>
 
 </RelativeLayout>

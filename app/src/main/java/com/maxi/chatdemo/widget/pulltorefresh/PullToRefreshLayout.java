@@ -36,7 +36,6 @@ public class PullToRefreshLayout extends LinearLayout {
                 ViewGroup.LayoutParams.MATCH_PARENT);
         myList = new PullToRefreshListView(getContext());
         myList.setBackgroundColor(Color.parseColor("#FFFFFF"));
-        myList.setDividerHeight(0);
         myList.setLayoutParams(lp1);
         LinearLayout.LayoutParams lp2 = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ScreenUtil.dip2px(getContext(), 100));
         pullText = new TextView(getContext());

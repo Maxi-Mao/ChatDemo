@@ -12,11 +12,12 @@ import android.os.Message;
 import android.provider.MediaStore;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.text.Spannable;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.View;
-import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -26,9 +27,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.maxi.chatdemo.adapter.ChatAdapter;
+import com.maxi.chatdemo.adapter.ChatRecyclerAdapter;
 import com.maxi.chatdemo.adapter.DataAdapter;
 import com.maxi.chatdemo.adapter.ExpressionAdapter;
 import com.maxi.chatdemo.adapter.ExpressionPagerAdapter;
+import com.maxi.chatdemo.animator.SlideInOutBottomItemAnimator;
 import com.maxi.chatdemo.entity.ChatBean;
 import com.maxi.chatdemo.entity.ChatBean.SendState;
 import com.maxi.chatdemo.utils.FileSaveUtil;
@@ -40,9 +43,9 @@ import com.maxi.chatdemo.widget.AudioRecordButton;
 import com.maxi.chatdemo.widget.ChatBottomView;
 import com.maxi.chatdemo.widget.ExpandGridView;
 import com.maxi.chatdemo.widget.HeadIconSelectorView;
-import com.maxi.chatdemo.widget.MediaManager;
 import com.maxi.chatdemo.widget.pulltorefresh.PullToRefreshLayout;
 import com.maxi.chatdemo.widget.pulltorefresh.PullToRefreshListView;
+import com.maxi.chatdemo.widget.pulltorefresh.WrapContentLinearLayoutManager;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -54,12 +57,12 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ChatActivity extends AppCompatActivity implements View.OnLayoutChangeListener {
+public class ChatActivity extends AppCompatActivity {
     private PullToRefreshLayout pullList;
     private boolean isDown = false;
     private ListView mess_lv;
     private PullToRefreshListView myList;
-    private ChatAdapter tbAdapter;
+    private ChatRecyclerAdapter tbAdapter;
 
     private DataAdapter adapter;
     private AudioRecordButton voiceBtn;
@@ -73,7 +76,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnLayoutChan
     private SendMessageHandler sendMessageHandler;
     private File mCurrentPhotoFile;
     private ChatBottomView tbbv;
-    private View activityRootView;
+    //    private View activityRootView;
     private Toast mToast;
     private int screenHeight = 0;
     private int keyHeight = 0;
@@ -100,7 +103,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnLayoutChan
         pullList = (PullToRefreshLayout) findViewById(R.id.content_lv);
         assert pullList != null;
         myList = pullList.returnMylist();
-        activityRootView = findViewById(R.id.layout_tongbao_rl);
+//        activityRootView = findViewById(R.id.layout_tongbao_rl);
         mEditTextContent = (EditText) findViewById(R.id.mess_et);
         mess_iv = (ImageView) findViewById(R.id.mess_iv);
         emoji = (ImageView) findViewById(R.id.emoji);
@@ -117,19 +120,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnLayoutChan
         // TODO Auto-generated method stub
         super.onResume();
         // 添加layout大小发生改变监听器
-        activityRootView.addOnLayoutChangeListener(this);
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        MediaManager.pause();
-        MediaManager.release();
-        tblist.clear();
-        tbAdapter.notifyDataSetChanged();
-        myList.setAdapter(null);
-        handler.removeCallbacksAndMessages(null);
-        sendMessageHandler.removeCallbacksAndMessages(null);
+//        activityRootView.addOnLayoutChangeListener(this);
     }
 
     @SuppressLint({"NewApi", "InflateParams"})
@@ -159,9 +150,10 @@ public class ChatActivity extends AppCompatActivity implements View.OnLayoutChan
             }
         };
         pullList.setpulltorefreshNotifier(pullNotifier);
-        tbAdapter = new ChatAdapter(this);
+        tbAdapter = new ChatRecyclerAdapter(this, tblist);
+        myList.setLayoutManager(new WrapContentLinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+        myList.setItemAnimator(new SlideInOutBottomItemAnimator(myList));
         myList.setAdapter(tbAdapter);
-        tbAdapter.notifyDataSetChanged();
 
         // 获取屏幕高度
         screenHeight = this.getWindowManager().getDefaultDisplay().getHeight();
@@ -170,23 +162,23 @@ public class ChatActivity extends AppCompatActivity implements View.OnLayoutChan
         sendMessageHandler = new SendMessageHandler(this);
         tbAdapter.isPicRefresh = true;
         tbAdapter.notifyDataSetChanged();
-        tbAdapter.setSendErrorListener(new ChatAdapter.SendErrorListener() {
+        tbAdapter.setSendErrorListener(new ChatRecyclerAdapter.SendErrorListener() {
 
             @Override
             public void onClick(int position) {
                 // TODO Auto-generated method stub
                 ChatBean tbub = tblist.get(position);
-                if (tbub.getMessagetype() == ChatAdapter.VOICE_MSG) {
+                if (tbub.getType() == ChatRecyclerAdapter.TO_USER_VOICE) {
                     upVoice(tbub.getUserVoiceTime(), tbub.getUserVoicePath());
                     tblist.remove(position);
-                } else if (tbub.getMessagetype() == ChatAdapter.IMG_MSG) {
+                } else if (tbub.getType() == ChatRecyclerAdapter.TO_USER_IMG) {
                     upImage(tbub.getImageLocal());
                     tblist.remove(position);
                 }
             }
 
         });
-        tbAdapter.setVoiceIsReadListener(new ChatAdapter.VoiceIsRead() {
+        tbAdapter.setVoiceIsReadListener(new ChatRecyclerAdapter.VoiceIsRead() {
 
             @Override
             public void voiceOnClick(int position) {
@@ -381,19 +373,19 @@ public class ChatActivity extends AppCompatActivity implements View.OnLayoutChan
             }
 
         });
-        myList.setOnScrollListener(new AbsListView.OnScrollListener() {
+        myList.setOnScrollListener(new RecyclerView.OnScrollListener() {
 
             @Override
-            public void onScrollStateChanged(AbsListView view, int scrollState) {
+            public void onScrollStateChanged(RecyclerView view, int scrollState) {
                 // TODO Auto-generated method stub
                 switch (scrollState) {
-                    case SCROLL_STATE_IDLE:
+                    case RecyclerView.SCROLL_STATE_IDLE:
                         tbAdapter.handler.removeCallbacksAndMessages(null);
                         tbAdapter.setIsGif(true);
                         tbAdapter.isPicRefresh = false;
                         tbAdapter.notifyDataSetChanged();
                         break;
-                    case SCROLL_STATE_TOUCH_SCROLL:
+                    case RecyclerView.SCROLL_STATE_DRAGGING:
                         tbAdapter.handler.removeCallbacksAndMessages(null);
                         tbAdapter.setIsGif(false);
                         tbAdapter.isPicRefresh = true;
@@ -407,10 +399,8 @@ public class ChatActivity extends AppCompatActivity implements View.OnLayoutChan
             }
 
             @Override
-            public void onScroll(AbsListView view, int firstVisibleItem,
-                                 int visibleItemCount, int totalItemCount) {
-                // TODO Auto-generated method stub
-
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
             }
         });
     }
@@ -538,16 +528,15 @@ public class ChatActivity extends AppCompatActivity implements View.OnLayoutChan
         return dir + fileName;
     }
 
-    @Override
-    public void onLayoutChange(View v, int left, int top, int right,
-                               int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
-        // TODO Auto-generated method stub
-        if (oldBottom != 0 && bottom != 0 && (oldBottom - bottom > keyHeight)) {
-            reset();
-            sendMessageHandler.sendEmptyMessage(REFRESH);
-        }
-    }
-
+    //    @Override
+//    public void onLayoutChange(View v, int left, int top, int right,
+//                               int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
+//        // TODO Auto-generated method stub
+//        if (oldBottom != 0 && bottom != 0 && (oldBottom - bottom > keyHeight)) {
+//            reset();
+//        }
+//    }
+//
     private void reset() {
         emoji_group.setVisibility(View.GONE);
         tbbv.setVisibility(View.GONE);
@@ -596,26 +585,23 @@ public class ChatActivity extends AppCompatActivity implements View.OnLayoutChan
             if (theActivity != null) {
                 switch (msg.what) {
                     case REFRESH:
-                        theActivity.tbAdapter.setUserList(theActivity.tblist);
                         theActivity.tbAdapter.isPicRefresh = true;
                         theActivity.tbAdapter.notifyDataSetChanged();
-                        theActivity.myList.setSelection(theActivity.tblist
-                                .size() - 1);
+                        int position = theActivity.tbAdapter.getItemCount() - 1 < 0 ? 0 : theActivity.tbAdapter.getItemCount() - 1;
+                        theActivity.myList.smoothScrollToPosition(position);
                         break;
                     case SEND_OK:
                         theActivity.mEditTextContent.setText("");
-                        theActivity.tbAdapter.setUserList(theActivity.tblist);
                         theActivity.tbAdapter.isPicRefresh = true;
-                        theActivity.tbAdapter.notifyDataSetChanged();
-                        theActivity.myList.setSelection(theActivity.tblist
+                        theActivity.tbAdapter.notifyItemInserted(theActivity.tblist
                                 .size() - 1);
+                        theActivity.myList.smoothScrollToPosition(theActivity.tbAdapter.getItemCount() - 1);
                         break;
                     case RECERIVE_OK:
-                        theActivity.tbAdapter.setUserList(theActivity.tblist);
                         theActivity.tbAdapter.isPicRefresh = true;
-                        theActivity.tbAdapter.notifyDataSetChanged();
-                        theActivity.myList.setSelection(theActivity.tblist
+                        theActivity.tbAdapter.notifyItemInserted(theActivity.tblist
                                 .size() - 1);
+                        theActivity.myList.smoothScrollToPosition(theActivity.tbAdapter.getItemCount() - 1);
                         break;
                     default:
                         break;
@@ -748,8 +734,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnLayoutChan
      */
     private void sendMsgText() {
         String content = mEditTextContent.getText().toString();
-        tblist.add(getTbub(userName, ChatAdapter.TO_USER,
-                ChatAdapter.TEXT_MSG, content, null, null,
+        tblist.add(getTbub(userName, ChatRecyclerAdapter.TO_USER_MSG, content, null, null,
                 null, null, null, 0f, SendState.COMPLETED));
         sendMessageHandler.sendEmptyMessage(SEND_OK);
         this.content = content;
@@ -766,10 +751,9 @@ public class ChatActivity extends AppCompatActivity implements View.OnLayoutChan
         ChatBean tbub = new ChatBean();
         tbub.setUserName(userName);
         String time = returnTime();
-        tbub.setMessagetype(ChatAdapter.TEXT_MSG);
         tbub.setUserContent(content);
         tbub.setTime(time);
-        tbub.setType(ChatAdapter.FROM_USER);
+        tbub.setType(ChatRecyclerAdapter.FROM_USER_MSG);
         tblist.add(tbub);
         sendMessageHandler.sendEmptyMessage(RECERIVE_OK);
     }
@@ -781,16 +765,13 @@ public class ChatActivity extends AppCompatActivity implements View.OnLayoutChan
 
     private void upImage(String filePath) {
         if (i == 0) {
-            tblist.add(getTbub(userName, ChatAdapter.TO_USER,
-                    ChatAdapter.IMG_MSG, null, null, null, filePath, null, null,
+            tblist.add(getTbub(userName, ChatRecyclerAdapter.TO_USER_IMG, null, null, null, filePath, null, null,
                     0f, SendState.SENDING));
         } else if (i == 1) {
-            tblist.add(getTbub(userName, ChatAdapter.TO_USER,
-                    ChatAdapter.IMG_MSG, null, null, null, filePath, null, null,
+            tblist.add(getTbub(userName, ChatRecyclerAdapter.TO_USER_IMG, null, null, null, filePath, null, null,
                     0f, SendState.SENDERROR));
         } else if (i == 2) {
-            tblist.add(getTbub(userName, ChatAdapter.TO_USER,
-                    ChatAdapter.IMG_MSG, null, null, null, filePath, null, null,
+            tblist.add(getTbub(userName, ChatRecyclerAdapter.TO_USER_IMG, null, null, null, filePath, null, null,
                     0f, SendState.COMPLETED));
             i = -1;
         }
@@ -810,9 +791,8 @@ public class ChatActivity extends AppCompatActivity implements View.OnLayoutChan
         tbub.setUserName(userName);
         String time = returnTime();
         tbub.setTime(time);
-        tbub.setMessagetype(ChatAdapter.IMG_MSG);
         tbub.setImageLocal(filePath);
-        tbub.setType(ChatAdapter.FROM_USER);
+        tbub.setType(ChatRecyclerAdapter.FROM_USER_IMG);
         tblist.add(tbub);
         sendMessageHandler.sendEmptyMessage(RECERIVE_OK);
     }
@@ -821,8 +801,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnLayoutChan
      * 发送语音
      */
     private void upVoice(float seconds, String filePath) {
-        tblist.add(getTbub(userName, ChatAdapter.TO_USER,
-                ChatAdapter.VOICE_MSG, null, null, null, null, filePath,
+        tblist.add(getTbub(userName, ChatRecyclerAdapter.TO_USER_VOICE, null, null, null, null, filePath,
                 null, seconds, SendState.SENDING));
         sendMessageHandler.sendEmptyMessage(SEND_OK);
         this.seconds = seconds;
@@ -841,11 +820,10 @@ public class ChatActivity extends AppCompatActivity implements View.OnLayoutChan
         tbub.setUserName(userName);
         String time = returnTime();
         tbub.setTime(time);
-        tbub.setMessagetype(ChatAdapter.VOICE_MSG);
         tbub.setUserVoiceTime(seconds);
         tbub.setUserVoicePath(filePath);
         tbAdapter.unReadPosition.add(tblist.size() + "");
-        tbub.setType(ChatAdapter.FROM_USER);
+        tbub.setType(ChatRecyclerAdapter.FROM_USER_VOICE);
         tblist.add(tbub);
         sendMessageHandler.sendEmptyMessage(RECERIVE_OK);
     }
@@ -873,7 +851,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnLayoutChan
         }
     };
 
-    private ChatBean getTbub(String username, int type, int MsgType,
+    private ChatBean getTbub(String username, int type,
                              String Content, String imageIconUrl, String imageUrl,
                              String imageLocal, String userVoicePath, String userVoiceUrl,
                              Float userVoiceTime, ChatBean.SendState sendState) {
@@ -882,7 +860,6 @@ public class ChatActivity extends AppCompatActivity implements View.OnLayoutChan
         String time = returnTime();
         tbub.setTime(time);
         tbub.setType(type);
-        tbub.setMessagetype(MsgType);
         tbub.setUserContent(Content);
         tbub.setImageIconUrl(imageIconUrl);
         tbub.setImageUrl(imageUrl);

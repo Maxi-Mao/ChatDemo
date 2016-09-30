@@ -1,15 +1,16 @@
 package com.maxi.chatdemo.widget.pulltorefresh;
 
 import android.content.Context;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.ListView;
 
 /**
  * Created by Mao Jiqing on 2016/9/27.
  */
-public class PullToRefreshListView extends ListView {
+public class PullToRefreshListView extends RecyclerView {
     boolean allowDragBottom = true;
     float downY = 0;
     boolean needConsumeTouch = true;
@@ -52,7 +53,7 @@ public class PullToRefreshListView extends ListView {
         if (c == null) {
             return 0;
         }
-        int firstVisiblePosition = getFirstVisiblePosition();
+        int firstVisiblePosition =  ((LinearLayoutManager)getLayoutManager()).findFirstVisibleItemPosition();
         int top = c.getTop();
         return -top + firstVisiblePosition * c.getHeight();
     }

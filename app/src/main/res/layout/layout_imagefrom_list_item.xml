@@ -5,7 +5,7 @@
     android:padding="5dp">
 
     <TextView
-        android:id="@+id/mychat_time"
+        android:id="@+id/chat_time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
@@ -15,27 +15,24 @@
         android:visibility="gone" />
 
     <ImageView
-        android:id="@+id/tb_my_user_icon"
+        android:id="@+id/tb_other_user_icon"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:layout_alignParentRight="true"
-        android:layout_below="@id/mychat_time" />
+        android:layout_alignParentLeft="true"
+        android:layout_below="@id/chat_time" />
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/mychat_time"
-        android:layout_toLeftOf="@+id/tb_my_user_icon"
+        android:layout_below="@id/chat_time"
+        android:layout_toRightOf="@+id/tb_other_user_icon"
         android:orientation="horizontal">
 
-        <com.maxi.chatdemo.widget.GifTextView
-            android:id="@+id/mycontent"
+        <com.maxi.chatdemo.widget.BubbleImageView
+            android:id="@+id/image_message"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="5dp"
-            android:background="@drawable/chatto_bg_focused"
-            android:textColor="@color/white"
-            android:textSize="16sp" />
+            android:scaleType="centerCrop" />
     </LinearLayout>
 
 </RelativeLayout>
