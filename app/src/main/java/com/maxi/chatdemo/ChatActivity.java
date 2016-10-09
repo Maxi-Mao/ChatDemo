@@ -20,6 +20,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Spannable;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
@@ -43,6 +44,7 @@ import com.maxi.chatdemo.utils.FileSaveUtil;
 import com.maxi.chatdemo.utils.ImageCheckoutUtil;
 import com.maxi.chatdemo.utils.KeyBoardUtils;
 import com.maxi.chatdemo.utils.PictureUtil;
+import com.maxi.chatdemo.utils.ScreenUtil;
 import com.maxi.chatdemo.utils.SmileUtils;
 import com.maxi.chatdemo.widget.AudioRecordButton;
 import com.maxi.chatdemo.widget.ChatBottomView;
@@ -60,14 +62,16 @@ import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ChatActivity extends AppCompatActivity {
-    private final int SDK_PERMISSION_REQUEST = 127;
-    private String permissionInfo;
-
     private PullToRefreshLayout pullList;
     private boolean isDown = false;
+    private boolean CAN_WRITE_EXTERNAL_STORAGE = true;
+    private boolean CAN_RECORD_AUDIO = true;
+    private int bottomStatusHeight = 0;
     private ListView mess_lv;
     private PullToRefreshListView myList;
     private ChatRecyclerAdapter tbAdapter;
@@ -87,10 +91,12 @@ public class ChatActivity extends AppCompatActivity {
     private View activityRootView;
     private Toast mToast;
     private int listSlideHeight = 0;//滑动距离
+    private String permissionInfo;
     private String camPicPath;
     private String item[] = {"你好!", "我正忙着呢,等等", "有啥事吗？", "有时间聊聊吗", "再见！"};
     private List<ChatBean> tblist = new ArrayList<ChatBean>();
     private List<String> reslist;
+    private static final int SDK_PERMISSION_REQUEST = 127;
     private static final int IMAGE_SIZE = 100 * 1024;// 300kb
     private static final int SEND_OK = 0x1110;
     private static final int REFRESH = 0x0011;
@@ -103,7 +109,6 @@ public class ChatActivity extends AppCompatActivity {
         findView();
         initpop();
         init();
-
         // after andrioid m,must request Permiision on runtime
         getPersimmions();
     }
@@ -122,8 +127,8 @@ public class ChatActivity extends AppCompatActivity {
 //            if(checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){
 //                permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION);
 //            }
-			/*
-			 * 读写权限和电话状态权限非必要权限(建议授予)只会申请一次，用户同意或者禁止，只会弹一次
+            /*
+             * 读写权限和电话状态权限非必要权限(建议授予)只会申请一次，用户同意或者禁止，只会弹一次
 			 */
             // 读写权限
             if (addPermission(permissions, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
@@ -147,14 +152,14 @@ public class ChatActivity extends AppCompatActivity {
     @TargetApi(23)
     private boolean addPermission(ArrayList<String> permissionsList, String permission) {
         if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) { // 如果应用没有获得对应权限,则添加到列表中,准备批量申请
-            if (shouldShowRequestPermissionRationale(permission)){
+            if (shouldShowRequestPermissionRationale(permission)) {
                 return true;
-            }else{
+            } else {
                 permissionsList.add(permission);
                 return false;
             }
 
-        }else{
+        } else {
             return true;
         }
     }
@@ -164,7 +169,31 @@ public class ChatActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         // TODO Auto-generated method stub
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
+        switch (requestCode) {
+            case SDK_PERMISSION_REQUEST:
+                Map<String, Integer> perms = new HashMap<String, Integer>();
+                // Initial
+                perms.put(Manifest.permission.WRITE_EXTERNAL_STORAGE, PackageManager.PERMISSION_GRANTED);
+                perms.put(Manifest.permission.RECORD_AUDIO, PackageManager.PERMISSION_GRANTED);
+                // Fill with results
+                for (int i = 0; i < permissions.length; i++)
+                    perms.put(permissions[i], grantResults[i]);
+                // Check for ACCESS_FINE_LOCATION
+                if (perms.get(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                    // Permission Denied
+                    CAN_WRITE_EXTERNAL_STORAGE = false;
+                    Toast.makeText(ChatActivity.this, "禁用图片权限将导致发送图片功能无法使用！", Toast.LENGTH_SHORT)
+                            .show();
+                }
+                if(perms.get(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED){
+                    CAN_RECORD_AUDIO = false;
+                    Toast.makeText(ChatActivity.this, "禁用录制音频权限将导致语音功能无法使用！", Toast.LENGTH_SHORT)
+                            .show();
+                }
+                break;
+            default:
+                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
     }
 
     private void findView() {
@@ -330,37 +359,45 @@ public class ChatActivity extends AppCompatActivity {
             public void onClick(int from) {
                 switch (from) {
                     case ChatBottomView.FROM_CAMERA:
-                        final String state = Environment.getExternalStorageState();
-                        if (Environment.MEDIA_MOUNTED.equals(state)) {
-                            camPicPath = getSavePicPath();
-                            Intent openCameraIntent = new Intent(
-                                    MediaStore.ACTION_IMAGE_CAPTURE);
-                            Uri uri = Uri.fromFile(new File(camPicPath));
-                            openCameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
-                            startActivityForResult(openCameraIntent,
-                                    ChatBottomView.FROM_CAMERA);
-                        } else {
-                            showToast("请检查内存卡");
+                        if(!CAN_WRITE_EXTERNAL_STORAGE){
+                            Toast.makeText(ChatActivity.this,"权限未开通\n请到设置中开通相册权限",Toast.LENGTH_SHORT).show();
+                        }else {
+                            final String state = Environment.getExternalStorageState();
+                            if (Environment.MEDIA_MOUNTED.equals(state)) {
+                                camPicPath = getSavePicPath();
+                                Intent openCameraIntent = new Intent(
+                                        MediaStore.ACTION_IMAGE_CAPTURE);
+                                Uri uri = Uri.fromFile(new File(camPicPath));
+                                openCameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+                                startActivityForResult(openCameraIntent,
+                                        ChatBottomView.FROM_CAMERA);
+                            } else {
+                                showToast("请检查内存卡");
+                            }
                         }
                         break;
                     case ChatBottomView.FROM_GALLERY:
-                        String status = Environment.getExternalStorageState();
-                        if (status.equals(Environment.MEDIA_MOUNTED)) {// 判断是否有SD卡
-                            Intent intent = new Intent();
-                            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
-                                intent.setAction(Intent.ACTION_GET_CONTENT);
+                        if(!CAN_WRITE_EXTERNAL_STORAGE){
+                            Toast.makeText(ChatActivity.this,"权限未开通\n请到设置中开通相册权限",Toast.LENGTH_SHORT).show();
+                        }else {
+                            String status = Environment.getExternalStorageState();
+                            if (status.equals(Environment.MEDIA_MOUNTED)) {// 判断是否有SD卡
+                                Intent intent = new Intent();
+                                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
+                                    intent.setAction(Intent.ACTION_GET_CONTENT);
+                                } else {
+                                    intent.setAction(Intent.ACTION_OPEN_DOCUMENT);
+                                    intent.addCategory(Intent.CATEGORY_OPENABLE);
+                                    intent.putExtra("crop", "true");
+                                    intent.putExtra("scale", "true");
+                                    intent.putExtra("scaleUpIfNeeded", true);
+                                }
+                                intent.setType("image/*");
+                                startActivityForResult(intent,
+                                        ChatBottomView.FROM_GALLERY);
                             } else {
-                                intent.setAction(Intent.ACTION_OPEN_DOCUMENT);
-                                intent.addCategory(Intent.CATEGORY_OPENABLE);
-                                intent.putExtra("crop", "true");
-                                intent.putExtra("scale", "true");
-                                intent.putExtra("scaleUpIfNeeded", true);
+                                showToast("没有SD卡");
                             }
-                            intent.setType("image/*");
-                            startActivityForResult(intent,
-                                    ChatBottomView.FROM_GALLERY);
-                        } else {
-                            showToast("没有SD卡");
                         }
                         break;
 
@@ -466,6 +503,8 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
         controlKeyboardLayout(activityRootView, pullList);
+        bottomStatusHeight = ScreenUtil.getBottomStatusHeight(this);
+        Log.i("CHAT_ACTIVITY",bottomStatusHeight + " = bottomStatusHeight");
     }
 
     /**
@@ -483,26 +522,34 @@ public class ChatActivity extends AppCompatActivity {
                 ChatActivity.this.getWindow().getDecorView().getWindowVisibleDisplayFrame(r);
                 //获取屏幕的高度
                 int screenHeight = ChatActivity.this.getWindow().getDecorView().getRootView().getHeight();
+                Log.i("CHAT_ACTIVITY",screenHeight + " = screenHeight");
                 //此处就是用来获取键盘的高度的， 在键盘没有弹出的时候 此高度为0 键盘弹出的时候为一个正数
                 int heightDifference = screenHeight - r.bottom;
+                Log.i("CHAT_ACTIVITY",heightDifference + " = heightDifference");
                 int recyclerHeight = 0;
                 if (wcLinearLayoutManger != null) {
                     recyclerHeight = wcLinearLayoutManger.getRecyclerHeight();
                 }
-                if (heightDifference == 0) {
+                Log.i("CHAT_ACTIVITY",recyclerHeight + " = recyclerHeight");
+                if (heightDifference == bottomStatusHeight) {
                     needToScrollView.scrollTo(0, 0);
+                    Log.i("CHAT_ACTIVITY","heightDifference");
                 } else {
                     if (heightDifference < recyclerHeight) {
                         int contentHeight = wcLinearLayoutManger == null ? 0 : wcLinearLayoutManger.getHeight();
+                        Log.i("CHAT_ACTIVITY",contentHeight + " = contentHeight");
                         if (recyclerHeight < contentHeight) {
                             listSlideHeight = heightDifference - (contentHeight - recyclerHeight);
+                            Log.i("CHAT_ACTIVITY",listSlideHeight + " = listSlideHeight 1 ");
                             needToScrollView.scrollTo(0, listSlideHeight);
                         } else {
                             listSlideHeight = heightDifference;
+                            Log.i("CHAT_ACTIVITY",listSlideHeight + " = listSlideHeight 2 ");
                             needToScrollView.scrollTo(0, listSlideHeight);
                         }
                     } else {
                         listSlideHeight = 0;
+                        Log.i("CHAT_ACTIVITY",listSlideHeight + " = listSlideHeight 3 ");
                     }
                 }
             }
@@ -703,6 +750,7 @@ public class ChatActivity extends AppCompatActivity {
                 }
             }
         }
+
     }
 
     /**

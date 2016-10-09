@@ -25,7 +25,7 @@ public class GifTextView extends EditText {
 	/**
 	 * 注：如果获取的gif帧与帧之间的时间间隔都不相同，建议调个固定的，最好的方法是将gif图的间隔设置相同
 	 */
-	private static final int DELAYED = 500;
+	private static final int DELAYED = 300;
 	/**
 	 * @author Dragon SpanInfo
 	 *         类用于存储一个要显示的图片（动态或静态）的信息，包括分解后的每一帧mapList、替代文字的起始位置、终止位置

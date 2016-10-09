@@ -26,39 +26,12 @@ public class WrapContentLinearLayoutManager extends LinearLayoutManager {
             this.recycler = recycler;
             super.onLayoutChildren(recycler, state);
         } catch (IndexOutOfBoundsException e) {
-            Log.e("probe", "meet a IOOBE in RecyclerView");
+            Log.e("probe", "ERROR = " + e.getMessage());
         }
     }
 
-    //    @Override
-//    public void onMeasure(RecyclerView.Recycler recycler, RecyclerView.State state,
-//                          int widthSpec, int heightSpec) {
-//        int width = 0;
-//        int height = 0;
-//        for (int i = 0; i < getItemCount(); i++) {
-//            measureScrapChild(recycler, i,
-//                    View.MeasureSpec.makeMeasureSpec(i, View.MeasureSpec.UNSPECIFIED),
-//                    View.MeasureSpec.makeMeasureSpec(i, View.MeasureSpec.UNSPECIFIED),
-//                    mMeasuredDimension);
-//
-//            if (getOrientation() == HORIZONTAL) {
-//                width = width + mMeasuredDimension[0];
-//                if (i == 0) {
-//                    height = mMeasuredDimension[1];
-//                }
-//            } else {
-//                height = height + mMeasuredDimension[1];
-//                if (i == 0) {
-//                    width = mMeasuredDimension[0];
-//                }
-//            }
-//        }
-//        recyclerHeight = height;
-//        Log.i("maojiqing","recyclerHeight ==> "+recyclerHeight);
-//    }
-//
     public int getRecyclerHeight() {
-        if(recycler == null){
+        if (recycler == null) {
             return 0;
         }
         int height = 0;
