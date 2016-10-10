@@ -55,9 +55,13 @@
 ##16/10/10更新：
 
 * 添加ListView的实现方式：PullToRefreshListView
+
 PullToRefreshRecyclerView为RecyclerView的实现方式，若想切换ListView则需对ChatActivity和PullToRefreshLayout等做修改和一些属性修改。
+
 ListView适配器:ChatListViewAdapter
+
 RecyclerView适配器:ChatRecyclerAdapter
+
 注：RecyclerView仍在完善中，若急需使用建议使用ListView。
 
 ##后记：
