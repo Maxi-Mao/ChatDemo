@@ -23,7 +23,7 @@
 
 ###主要：
 * ChatActivity:聊天界面
-* ChatAdapter:聊天界面适配器
+* ChatListViewAdapter:ListView聊天界面适配器
 * ChatRecyclerAdapter:RecyclerView聊天界面适配器
 * ChatBean:聊天数据对象
 
@@ -33,7 +33,7 @@
 * BubbleImageView：自定义图片裁剪控件
 * MediaManager：语音播放控件
 * GifTextView：自定义图文混排控件
-* pulltorefresh类：自定义下拉加载更多控件（仅支持下拉加载更多）
+* pulltorefresh包：自定义下拉加载更多控件（仅支持下拉加载更多）
 * SlideInOutBottomItemAnimator:RecyclerView添加item动画（上滑）
 
 图片加载使用Glide。
@@ -52,5 +52,14 @@
 
 * 优化界面，提升用户体验
 
+##16/10/10更新：
+
+* 添加ListView的实现方式：PullToRefreshListView
+PullToRefreshRecyclerView为RecyclerView的实现方式，若想切换ListView则需对ChatActivity和PullToRefreshLayout等做修改和一些属性修改。
+ListView适配器:ChatListViewAdapter
+RecyclerView适配器:ChatRecyclerAdapter
+注：RecyclerView仍在完善中，若急需使用建议使用ListView。
+
 ##后记：
+
 该项目也是将之前做过的一些东西汇合了一下，时间比较短，大家就看一下具体的实现方式吧，可能有点乱，有时间的话我整理一下。
