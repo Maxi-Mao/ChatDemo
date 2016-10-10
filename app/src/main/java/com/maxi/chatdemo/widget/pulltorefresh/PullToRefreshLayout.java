@@ -20,7 +20,7 @@ import com.maxi.chatdemo.utils.ScreenUtil;
  */
 public class PullToRefreshLayout extends LinearLayout {
     private ViewDragHelper VDH;
-    private PullToRefreshListView myList;
+    private PullToRefreshRecyclerView myList;
     private TextView pullText;
     private pulltorefreshNotifier pullNotifier;
 
@@ -34,7 +34,7 @@ public class PullToRefreshLayout extends LinearLayout {
     private void init() {
         LinearLayout.LayoutParams lp1 = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT);
-        myList = new PullToRefreshListView(getContext());
+        myList = new PullToRefreshRecyclerView(getContext());
         myList.setBackgroundColor(Color.parseColor("#FFFFFF"));
         myList.setLayoutParams(lp1);
         LinearLayout.LayoutParams lp2 = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ScreenUtil.dip2px(getContext(), 100));
@@ -48,7 +48,7 @@ public class PullToRefreshLayout extends LinearLayout {
         addView(myList);
     }
 
-    public PullToRefreshListView returnMylist() {
+    public PullToRefreshRecyclerView returnMylist() {
         return myList;
     }
 

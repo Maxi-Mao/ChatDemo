@@ -9,7 +9,7 @@
         android:layout_height="wrap_content"
         android:text="pull to refresh!"
         />
-    <com.maxi.chatdemo.widget.pulltorefresh.PullToRefreshListView
+    <com.maxi.chatdemo.widget.pulltorefresh.PullToRefreshRecyclerView
         android:id="@+id/pull_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

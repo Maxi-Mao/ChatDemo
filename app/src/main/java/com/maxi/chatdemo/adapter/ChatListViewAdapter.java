@@ -48,7 +48,7 @@ import java.util.List;
 /**
  * Created by Mao Jiqing on 2016/9/28.
  */
-public class ChatAdapter extends BaseAdapter {
+public class ChatListViewAdapter extends BaseAdapter {
     private Context context;
     private List<ChatBean> userList = new ArrayList<ChatBean>();
     public static int FROM_USER = 0;//接收消息类型
@@ -84,7 +84,7 @@ public class ChatAdapter extends BaseAdapter {
         this.voiceIsRead = voiceIsRead;
     }
 
-    public ChatAdapter(Context context) {
+    public ChatListViewAdapter(Context context) {
         this.context = context;
         mLayoutInflater = LayoutInflater.from(context);
         // 获取系统宽度
@@ -98,15 +98,15 @@ public class ChatAdapter extends BaseAdapter {
     }
 
     public static class MyHandler extends Handler {
-        private final WeakReference<ChatAdapter> mTbAdapter;
+        private final WeakReference<ChatListViewAdapter> mTbAdapter;
 
-        public MyHandler(ChatAdapter tbAdapter) {
-            mTbAdapter = new WeakReference<ChatAdapter>(tbAdapter);
+        public MyHandler(ChatListViewAdapter tbAdapter) {
+            mTbAdapter = new WeakReference<ChatListViewAdapter>(tbAdapter);
         }
 
         @Override
         public void handleMessage(Message msg) {
-            ChatAdapter tbAdapter = mTbAdapter.get();
+            ChatListViewAdapter tbAdapter = mTbAdapter.get();
 
             if (tbAdapter != null) {
             }

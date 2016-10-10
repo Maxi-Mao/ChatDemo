@@ -20,7 +20,6 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Spannable;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
@@ -32,7 +31,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.maxi.chatdemo.adapter.ChatAdapter;
+import com.maxi.chatdemo.adapter.ChatListViewAdapter;
 import com.maxi.chatdemo.adapter.ChatRecyclerAdapter;
 import com.maxi.chatdemo.adapter.DataAdapter;
 import com.maxi.chatdemo.adapter.ExpressionAdapter;
@@ -51,7 +50,7 @@ import com.maxi.chatdemo.widget.ChatBottomView;
 import com.maxi.chatdemo.widget.ExpandGridView;
 import com.maxi.chatdemo.widget.HeadIconSelectorView;
 import com.maxi.chatdemo.widget.pulltorefresh.PullToRefreshLayout;
-import com.maxi.chatdemo.widget.pulltorefresh.PullToRefreshListView;
+import com.maxi.chatdemo.widget.pulltorefresh.PullToRefreshRecyclerView;
 import com.maxi.chatdemo.widget.pulltorefresh.WrapContentLinearLayoutManager;
 
 import java.io.File;
@@ -73,7 +72,7 @@ public class ChatActivity extends AppCompatActivity {
     private boolean CAN_RECORD_AUDIO = true;
     private int bottomStatusHeight = 0;
     private ListView mess_lv;
-    private PullToRefreshListView myList;
+    private PullToRefreshRecyclerView myList;
     private ChatRecyclerAdapter tbAdapter;
     private WrapContentLinearLayoutManager wcLinearLayoutManger;
     private DataAdapter adapter;
@@ -504,7 +503,6 @@ public class ChatActivity extends AppCompatActivity {
         });
         controlKeyboardLayout(activityRootView, pullList);
         bottomStatusHeight = ScreenUtil.getBottomStatusHeight(this);
-        Log.i("CHAT_ACTIVITY",bottomStatusHeight + " = bottomStatusHeight");
     }
 
     /**
@@ -522,34 +520,26 @@ public class ChatActivity extends AppCompatActivity {
                 ChatActivity.this.getWindow().getDecorView().getWindowVisibleDisplayFrame(r);
                 //获取屏幕的高度
                 int screenHeight = ChatActivity.this.getWindow().getDecorView().getRootView().getHeight();
-                Log.i("CHAT_ACTIVITY",screenHeight + " = screenHeight");
                 //此处就是用来获取键盘的高度的， 在键盘没有弹出的时候 此高度为0 键盘弹出的时候为一个正数
                 int heightDifference = screenHeight - r.bottom;
-                Log.i("CHAT_ACTIVITY",heightDifference + " = heightDifference");
                 int recyclerHeight = 0;
                 if (wcLinearLayoutManger != null) {
                     recyclerHeight = wcLinearLayoutManger.getRecyclerHeight();
                 }
-                Log.i("CHAT_ACTIVITY",recyclerHeight + " = recyclerHeight");
                 if (heightDifference == bottomStatusHeight) {
                     needToScrollView.scrollTo(0, 0);
-                    Log.i("CHAT_ACTIVITY","heightDifference");
                 } else {
                     if (heightDifference < recyclerHeight) {
                         int contentHeight = wcLinearLayoutManger == null ? 0 : wcLinearLayoutManger.getHeight();
-                        Log.i("CHAT_ACTIVITY",contentHeight + " = contentHeight");
                         if (recyclerHeight < contentHeight) {
                             listSlideHeight = heightDifference - (contentHeight - recyclerHeight);
-                            Log.i("CHAT_ACTIVITY",listSlideHeight + " = listSlideHeight 1 ");
                             needToScrollView.scrollTo(0, listSlideHeight);
                         } else {
                             listSlideHeight = heightDifference;
-                            Log.i("CHAT_ACTIVITY",listSlideHeight + " = listSlideHeight 2 ");
                             needToScrollView.scrollTo(0, listSlideHeight);
                         }
                     } else {
                         listSlideHeight = 0;
-                        Log.i("CHAT_ACTIVITY",listSlideHeight + " = listSlideHeight 3 ");
                     }
                 }
             }
@@ -621,7 +611,7 @@ public class ChatActivity extends AppCompatActivity {
                         File camFile = new File(camPicPath); // 图片文件路径
                         if (camFile.exists()) {
                             int size = ImageCheckoutUtil
-                                    .getImageSize(ChatAdapter
+                                    .getImageSize(ChatListViewAdapter
                                             .getLoacalBitmap(camPicPath));
                             if (size > IMAGE_SIZE) {
                                 showDialog(camPicPath);
@@ -649,7 +639,7 @@ public class ChatActivity extends AppCompatActivity {
                     String path = FileSaveUtil.getPath(getApplicationContext(), uri);
                     mCurrentPhotoFile = new File(path); // 图片文件路径
                     if (mCurrentPhotoFile.exists()) {
-                        int size = ImageCheckoutUtil.getImageSize(ChatAdapter
+                        int size = ImageCheckoutUtil.getImageSize(ChatListViewAdapter
                                 .getLoacalBitmap(path));
                         if (size > IMAGE_SIZE) {
                             showDialog(path);
