@@ -1,10 +1,19 @@
 # ChatDemo
 
+##主界面选择实现方式：
+
+![image](https://github.com/Maxi-Mao/ChatDemo/blob/master/ChatIMG/main.jpg)
+
 ##文字表情示例图片：
+
 ![image](https://github.com/Maxi-Mao/ChatDemo/blob/master/ChatIMG/img1.png)
+
 ##图片发送示例图片：
+
 ![image](https://github.com/Maxi-Mao/ChatDemo/blob/master/ChatIMG/img2.png)
+
 ##语音发送示例动图：
+
 ![image](https://github.com/Maxi-Mao/ChatDemo/blob/master/ChatIMG/voice.gif)
 
 ##介绍：
@@ -62,7 +71,7 @@ ListView适配器:ChatListViewAdapter
 
 RecyclerView适配器:ChatRecyclerAdapter
 
-注：RecyclerView仍在完善中，若急需使用建议使用ListView。
+##注：RecyclerView仍在完善中，若急需使用建议使用ListView。
 
 ##后记：
 
