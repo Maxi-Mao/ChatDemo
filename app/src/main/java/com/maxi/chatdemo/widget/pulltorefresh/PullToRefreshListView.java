@@ -16,6 +16,7 @@ public class PullToRefreshListView extends ListView {
 
     public PullToRefreshListView(Context context) {
         super(context);
+        setDivider(null);
     }
 
     public PullToRefreshListView(Context context, AttributeSet attrs) {

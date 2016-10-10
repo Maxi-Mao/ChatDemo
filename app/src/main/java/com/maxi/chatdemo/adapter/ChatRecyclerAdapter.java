@@ -102,6 +102,12 @@ public class ChatRecyclerAdapter extends
         this.isGif = isGif;
     }
 
+    /**
+     *
+     * @param parent
+     * @param viewType
+     * @return
+     */
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = null;
@@ -261,6 +267,11 @@ public class ChatRecyclerAdapter extends
         }
     }
 
+    /**
+     *
+     * @param holder
+     * @param position
+     */
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         ChatBean tbub = userList.get(position);

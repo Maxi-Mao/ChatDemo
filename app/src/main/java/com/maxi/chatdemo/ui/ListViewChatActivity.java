@@ -1,4 +1,4 @@
-package com.maxi.chatdemo;
+package com.maxi.chatdemo.ui;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -6,7 +6,6 @@ import android.annotation.TargetApi;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -16,13 +15,11 @@ import android.os.Message;
 import android.provider.MediaStore;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.text.Spannable;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.View;
-import android.view.ViewTreeObserver;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -31,14 +28,12 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.maxi.chatdemo.R;
 import com.maxi.chatdemo.adapter.ChatListViewAdapter;
-import com.maxi.chatdemo.adapter.ChatRecyclerAdapter;
 import com.maxi.chatdemo.adapter.DataAdapter;
 import com.maxi.chatdemo.adapter.ExpressionAdapter;
 import com.maxi.chatdemo.adapter.ExpressionPagerAdapter;
-import com.maxi.chatdemo.animator.SlideInOutBottomItemAnimator;
 import com.maxi.chatdemo.entity.ChatBean;
-import com.maxi.chatdemo.entity.ChatBean.SendState;
 import com.maxi.chatdemo.utils.FileSaveUtil;
 import com.maxi.chatdemo.utils.ImageCheckoutUtil;
 import com.maxi.chatdemo.utils.KeyBoardUtils;
@@ -50,8 +45,8 @@ import com.maxi.chatdemo.widget.ChatBottomView;
 import com.maxi.chatdemo.widget.ExpandGridView;
 import com.maxi.chatdemo.widget.HeadIconSelectorView;
 import com.maxi.chatdemo.widget.pulltorefresh.PullToRefreshLayout;
-import com.maxi.chatdemo.widget.pulltorefresh.PullToRefreshRecyclerView;
-import com.maxi.chatdemo.widget.pulltorefresh.WrapContentLinearLayoutManager;
+import com.maxi.chatdemo.widget.pulltorefresh.PullToRefreshListView;
+import com.maxi.chatdemo.widget.pulltorefresh.base.PullToRefreshView;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -65,16 +60,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ChatActivity extends AppCompatActivity {
+/**
+ * Created by Mao Jiqing on 2016/10/10.
+ */
+public class ListViewChatActivity extends AppCompatActivity {
     private PullToRefreshLayout pullList;
     private boolean isDown = false;
     private boolean CAN_WRITE_EXTERNAL_STORAGE = true;
     private boolean CAN_RECORD_AUDIO = true;
     private int bottomStatusHeight = 0;
     private ListView mess_lv;
-    private PullToRefreshRecyclerView myList;
-    private ChatRecyclerAdapter tbAdapter;
-    private WrapContentLinearLayoutManager wcLinearLayoutManger;
+    private PullToRefreshListView myList;
+    private ChatListViewAdapter tbAdapter;
+    //    private WrapContentLinearLayoutManager wcLinearLayoutManger;
     private DataAdapter adapter;
     private AudioRecordButton voiceBtn;
     private EditText mEditTextContent;
@@ -104,7 +102,7 @@ public class ChatActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_chat);
         findView();
         initpop();
         init();
@@ -181,12 +179,12 @@ public class ChatActivity extends AppCompatActivity {
                 if (perms.get(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                     // Permission Denied
                     CAN_WRITE_EXTERNAL_STORAGE = false;
-                    Toast.makeText(ChatActivity.this, "禁用图片权限将导致发送图片功能无法使用！", Toast.LENGTH_SHORT)
+                    Toast.makeText(ListViewChatActivity.this, "禁用图片权限将导致发送图片功能无法使用！", Toast.LENGTH_SHORT)
                             .show();
                 }
-                if(perms.get(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED){
+                if (perms.get(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                     CAN_RECORD_AUDIO = false;
-                    Toast.makeText(ChatActivity.this, "禁用录制音频权限将导致语音功能无法使用！", Toast.LENGTH_SHORT)
+                    Toast.makeText(ListViewChatActivity.this, "禁用录制音频权限将导致语音功能无法使用！", Toast.LENGTH_SHORT)
                             .show();
                 }
                 break;
@@ -197,8 +195,9 @@ public class ChatActivity extends AppCompatActivity {
 
     private void findView() {
         pullList = (PullToRefreshLayout) findViewById(R.id.content_lv);
+        pullList.setSlideView(new PullToRefreshView(this).getSlideView(PullToRefreshView.LISTVIEW));
         assert pullList != null;
-        myList = pullList.returnMylist();
+        myList = (PullToRefreshListView) pullList.returnMylist();
         activityRootView = findViewById(R.id.layout_tongbao_rl);
         mEditTextContent = (EditText) findViewById(R.id.mess_et);
         mess_iv = (ImageView) findViewById(R.id.mess_iv);
@@ -244,31 +243,29 @@ public class ChatActivity extends AppCompatActivity {
             }
         };
         pullList.setpulltorefreshNotifier(pullNotifier);
-        tbAdapter = new ChatRecyclerAdapter(this, tblist);
-        wcLinearLayoutManger = new WrapContentLinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
-        myList.setLayoutManager(wcLinearLayoutManger);
-        myList.setItemAnimator(new SlideInOutBottomItemAnimator(myList));
+        tbAdapter = new ChatListViewAdapter(this);
+        tbAdapter.setUserList(tblist);
         myList.setAdapter(tbAdapter);
         sendMessageHandler = new SendMessageHandler(this);
         tbAdapter.isPicRefresh = true;
         tbAdapter.notifyDataSetChanged();
-        tbAdapter.setSendErrorListener(new ChatRecyclerAdapter.SendErrorListener() {
+        tbAdapter.setSendErrorListener(new ChatListViewAdapter.SendErrorListener() {
 
             @Override
             public void onClick(int position) {
                 // TODO Auto-generated method stub
                 ChatBean tbub = tblist.get(position);
-                if (tbub.getType() == ChatRecyclerAdapter.TO_USER_VOICE) {
+                if (tbub.getType() == ChatListViewAdapter.TO_USER_VOICE) {
                     upVoice(tbub.getUserVoiceTime(), tbub.getUserVoicePath());
                     tblist.remove(position);
-                } else if (tbub.getType() == ChatRecyclerAdapter.TO_USER_IMG) {
+                } else if (tbub.getType() == ChatListViewAdapter.TO_USER_IMG) {
                     upImage(tbub.getImageLocal());
                     tblist.remove(position);
                 }
             }
 
         });
-        tbAdapter.setVoiceIsReadListener(new ChatRecyclerAdapter.VoiceIsRead() {
+        tbAdapter.setVoiceIsReadListener(new ChatListViewAdapter.VoiceIsRead() {
 
             @Override
             public void voiceOnClick(int position) {
@@ -295,14 +292,14 @@ public class ChatActivity extends AppCompatActivity {
                     tbbv.setVisibility(View.GONE);
                     mess_lv.setVisibility(View.GONE);
                     voiceBtn.setVisibility(View.VISIBLE);
-                    KeyBoardUtils.hideKeyBoard(ChatActivity.this,
+                    KeyBoardUtils.hideKeyBoard(ListViewChatActivity.this,
                             mEditTextContent);
                     voiceIv.setBackgroundResource(R.mipmap.chatting_setmode_keyboard_btn_normal);
                 } else {
                     mEditTextContent.setVisibility(View.VISIBLE);
                     voiceBtn.setVisibility(View.GONE);
                     voiceIv.setBackgroundResource(R.mipmap.voice_btn_normal);
-                    KeyBoardUtils.showKeyBoard(ChatActivity.this, mEditTextContent);
+                    KeyBoardUtils.showKeyBoard(ListViewChatActivity.this, mEditTextContent);
                 }
             }
 
@@ -336,16 +333,16 @@ public class ChatActivity extends AppCompatActivity {
                     emoji.setBackgroundResource(R.mipmap.emoji);
                     voiceIv.setBackgroundResource(R.mipmap.voice_btn_normal);
                     tbbv.setVisibility(View.VISIBLE);
-                    KeyBoardUtils.hideKeyBoard(ChatActivity.this,
+                    KeyBoardUtils.hideKeyBoard(ListViewChatActivity.this,
                             mEditTextContent);
                     mess_iv.setBackgroundResource(R.mipmap.chatting_setmode_keyboard_btn_normal);
                 } else {
                     tbbv.setVisibility(View.GONE);
-                    KeyBoardUtils.showKeyBoard(ChatActivity.this, mEditTextContent);
+                    KeyBoardUtils.showKeyBoard(ListViewChatActivity.this, mEditTextContent);
                     mess_iv.setBackgroundResource(R.mipmap.tb_more);
                     if (mess_lv.getVisibility() != View.GONE) {
                         mess_lv.setVisibility(View.GONE);
-                        KeyBoardUtils.showKeyBoard(ChatActivity.this, mEditTextContent);
+                        KeyBoardUtils.showKeyBoard(ListViewChatActivity.this, mEditTextContent);
                         mess_iv.setBackgroundResource(R.mipmap.tb_more);
                     }
                 }
@@ -358,9 +355,9 @@ public class ChatActivity extends AppCompatActivity {
             public void onClick(int from) {
                 switch (from) {
                     case ChatBottomView.FROM_CAMERA:
-                        if(!CAN_WRITE_EXTERNAL_STORAGE){
-                            Toast.makeText(ChatActivity.this,"权限未开通\n请到设置中开通相册权限",Toast.LENGTH_SHORT).show();
-                        }else {
+                        if (!CAN_WRITE_EXTERNAL_STORAGE) {
+                            Toast.makeText(ListViewChatActivity.this, "权限未开通\n请到设置中开通相册权限", Toast.LENGTH_SHORT).show();
+                        } else {
                             final String state = Environment.getExternalStorageState();
                             if (Environment.MEDIA_MOUNTED.equals(state)) {
                                 camPicPath = getSavePicPath();
@@ -376,9 +373,9 @@ public class ChatActivity extends AppCompatActivity {
                         }
                         break;
                     case ChatBottomView.FROM_GALLERY:
-                        if(!CAN_WRITE_EXTERNAL_STORAGE){
-                            Toast.makeText(ChatActivity.this,"权限未开通\n请到设置中开通相册权限",Toast.LENGTH_SHORT).show();
-                        }else {
+                        if (!CAN_WRITE_EXTERNAL_STORAGE) {
+                            Toast.makeText(ListViewChatActivity.this, "权限未开通\n请到设置中开通相册权限", Toast.LENGTH_SHORT).show();
+                        } else {
                             String status = Environment.getExternalStorageState();
                             if (status.equals(Environment.MEDIA_MOUNTED)) {// 判断是否有SD卡
                                 Intent intent = new Intent();
@@ -406,7 +403,7 @@ public class ChatActivity extends AppCompatActivity {
                             emoji.setBackgroundResource(R.mipmap.emoji);
                             voiceIv.setBackgroundResource(R.mipmap.voice_btn_normal);
                             mess_lv.setVisibility(View.VISIBLE);
-                            KeyBoardUtils.hideKeyBoard(ChatActivity.this,
+                            KeyBoardUtils.hideKeyBoard(ListViewChatActivity.this,
                                     mEditTextContent);
                             mess_iv.setBackgroundResource(R.mipmap.chatting_setmode_keyboard_btn_normal);
                         }
@@ -428,12 +425,12 @@ public class ChatActivity extends AppCompatActivity {
                     mess_iv.setBackgroundResource(R.mipmap.tb_more);
                     emoji_group.setVisibility(View.VISIBLE);
                     emoji.setBackgroundResource(R.mipmap.chatting_setmode_keyboard_btn_normal);
-                    KeyBoardUtils.hideKeyBoard(ChatActivity.this,
+                    KeyBoardUtils.hideKeyBoard(ListViewChatActivity.this,
                             mEditTextContent);
                 } else {
                     emoji_group.setVisibility(View.GONE);
                     emoji.setBackgroundResource(R.mipmap.emoji);
-                    KeyBoardUtils.showKeyBoard(ChatActivity.this, mEditTextContent);
+                    KeyBoardUtils.showKeyBoard(ListViewChatActivity.this, mEditTextContent);
                 }
             }
         });
@@ -471,24 +468,24 @@ public class ChatActivity extends AppCompatActivity {
             }
 
         });
-        myList.setOnScrollListener(new RecyclerView.OnScrollListener() {
+        myList.setOnScrollListener(new AbsListView.OnScrollListener() {
 
             @Override
-            public void onScrollStateChanged(RecyclerView view, int scrollState) {
+            public void onScrollStateChanged(AbsListView view, int scrollState) {
                 // TODO Auto-generated method stub
                 switch (scrollState) {
-                    case RecyclerView.SCROLL_STATE_IDLE:
+                    case SCROLL_STATE_IDLE:
                         tbAdapter.handler.removeCallbacksAndMessages(null);
                         tbAdapter.setIsGif(true);
                         tbAdapter.isPicRefresh = false;
                         tbAdapter.notifyDataSetChanged();
                         break;
-                    case RecyclerView.SCROLL_STATE_DRAGGING:
+                    case SCROLL_STATE_TOUCH_SCROLL:
                         tbAdapter.handler.removeCallbacksAndMessages(null);
                         tbAdapter.setIsGif(false);
                         tbAdapter.isPicRefresh = true;
                         reset();
-                        KeyBoardUtils.hideKeyBoard(ChatActivity.this,
+                        KeyBoardUtils.hideKeyBoard(ListViewChatActivity.this,
                                 mEditTextContent);
                         break;
                     default:
@@ -497,54 +494,56 @@ public class ChatActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
+            public void onScroll(AbsListView view, int firstVisibleItem,
+                                 int visibleItemCount, int totalItemCount) {
+                // TODO Auto-generated method stub
+
             }
         });
-        controlKeyboardLayout(activityRootView, pullList);
+//        controlKeyboardLayout(activityRootView, pullList);
         bottomStatusHeight = ScreenUtil.getBottomStatusHeight(this);
     }
 
-    /**
-     * @param root             最外层布局
-     * @param needToScrollView 要滚动的布局,就是说在键盘弹出的时候,你需要试图滚动上去的View,在键盘隐藏的时候,他又会滚动到原来的位置的布局
-     */
-    private void controlKeyboardLayout(final View root, final View needToScrollView) {
-        root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-
-            private Rect r = new Rect();
-
-            @Override
-            public void onGlobalLayout() {
-                //获取当前界面可视部分
-                ChatActivity.this.getWindow().getDecorView().getWindowVisibleDisplayFrame(r);
-                //获取屏幕的高度
-                int screenHeight = ChatActivity.this.getWindow().getDecorView().getRootView().getHeight();
-                //此处就是用来获取键盘的高度的， 在键盘没有弹出的时候 此高度为0 键盘弹出的时候为一个正数
-                int heightDifference = screenHeight - r.bottom;
-                int recyclerHeight = 0;
-                if (wcLinearLayoutManger != null) {
-                    recyclerHeight = wcLinearLayoutManger.getRecyclerHeight();
-                }
-                if (heightDifference == bottomStatusHeight) {
-                    needToScrollView.scrollTo(0, 0);
-                } else {
-                    if (heightDifference < recyclerHeight) {
-                        int contentHeight = wcLinearLayoutManger == null ? 0 : wcLinearLayoutManger.getHeight();
-                        if (recyclerHeight < contentHeight) {
-                            listSlideHeight = heightDifference - (contentHeight - recyclerHeight);
-                            needToScrollView.scrollTo(0, listSlideHeight);
-                        } else {
-                            listSlideHeight = heightDifference;
-                            needToScrollView.scrollTo(0, listSlideHeight);
-                        }
-                    } else {
-                        listSlideHeight = 0;
-                    }
-                }
-            }
-        });
-    }
+//    /**
+//     * @param root             最外层布局
+//     * @param needToScrollView 要滚动的布局,就是说在键盘弹出的时候,你需要试图滚动上去的View,在键盘隐藏的时候,他又会滚动到原来的位置的布局
+//     */
+//    private void controlKeyboardLayout(final View root, final View needToScrollView) {
+//        root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+//
+//            private Rect r = new Rect();
+//
+//            @Override
+//            public void onGlobalLayout() {
+//                //获取当前界面可视部分
+//                ListViewChatActivity.this.getWindow().getDecorView().getWindowVisibleDisplayFrame(r);
+//                //获取屏幕的高度
+//                int screenHeight = ListViewChatActivity.this.getWindow().getDecorView().getRootView().getHeight();
+//                //此处就是用来获取键盘的高度的， 在键盘没有弹出的时候 此高度为0 键盘弹出的时候为一个正数
+//                int heightDifference = screenHeight - r.bottom;
+//                int listViewHeight = 0;
+//                if (wcLinearLayoutManger != null) {
+//                    listViewHeight = wcLinearLayoutManger.getRecyclerHeight();
+//                }
+//                if (heightDifference == bottomStatusHeight) {
+//                    needToScrollView.scrollTo(0, 0);
+//                } else {
+//                    if (heightDifference < listViewHeight) {
+//                        int contentHeight = wcLinearLayoutManger == null ? 0 : wcLinearLayoutManger.getHeight();
+//                        if (listViewHeight < contentHeight) {
+//                            listSlideHeight = heightDifference - (contentHeight - listViewHeight);
+//                            needToScrollView.scrollTo(0, listSlideHeight);
+//                        } else {
+//                            listSlideHeight = heightDifference;
+//                            needToScrollView.scrollTo(0, listSlideHeight);
+//                        }
+//                    } else {
+//                        listSlideHeight = 0;
+//                    }
+//                }
+//            }
+//        });
+//    }
 
     private void downLoad() {
         if (!isDown) {
@@ -704,36 +703,36 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     static class SendMessageHandler extends Handler {
-        WeakReference<ChatActivity> mActivity;
+        WeakReference<ListViewChatActivity> mActivity;
 
-        SendMessageHandler(ChatActivity activity) {
-            mActivity = new WeakReference<ChatActivity>(activity);
+        SendMessageHandler(ListViewChatActivity activity) {
+            mActivity = new WeakReference<ListViewChatActivity>(activity);
         }
 
         @Override
         public void handleMessage(Message msg) {
             // TODO Auto-generated method stub
-            ChatActivity theActivity = mActivity.get();
+            ListViewChatActivity theActivity = mActivity.get();
             if (theActivity != null) {
                 switch (msg.what) {
                     case REFRESH:
                         theActivity.tbAdapter.isPicRefresh = true;
                         theActivity.tbAdapter.notifyDataSetChanged();
-                        int position = theActivity.tbAdapter.getItemCount() - 1 < 0 ? 0 : theActivity.tbAdapter.getItemCount() - 1;
-                        theActivity.myList.smoothScrollToPosition(position);
+                        theActivity.myList.setSelection(theActivity.tblist
+                                .size() - 1);
                         break;
                     case SEND_OK:
                         theActivity.mEditTextContent.setText("");
                         theActivity.tbAdapter.isPicRefresh = true;
-                        theActivity.tbAdapter.notifyItemInserted(theActivity.tblist
+                        theActivity.tbAdapter.notifyDataSetChanged();
+                        theActivity.myList.setSelection(theActivity.tblist
                                 .size() - 1);
-                        theActivity.myList.smoothScrollToPosition(theActivity.tbAdapter.getItemCount() - 1);
                         break;
                     case RECERIVE_OK:
                         theActivity.tbAdapter.isPicRefresh = true;
-                        theActivity.tbAdapter.notifyItemInserted(theActivity.tblist
+                        theActivity.tbAdapter.notifyDataSetChanged();
+                        theActivity.myList.setSelection(theActivity.tblist
                                 .size() - 1);
-                        theActivity.myList.smoothScrollToPosition(theActivity.tbAdapter.getItemCount() - 1);
                         break;
                     default:
                         break;
@@ -784,7 +783,7 @@ public class ChatActivity extends AppCompatActivity {
                                 mEditTextContent.getSelectionStart(), 0);
                         StringBuilder sBuilder = new StringBuilder(oriContent);
                         Spannable insertEmotion = SmileUtils.getSmiledText(
-                                ChatActivity.this,
+                                ListViewChatActivity.this,
                                 (String) field.get(null));
                         sBuilder.insert(index, insertEmotion);
                         mEditTextContent.setText(sBuilder.toString());
@@ -867,8 +866,8 @@ public class ChatActivity extends AppCompatActivity {
      */
     private void sendMsgText() {
         String content = mEditTextContent.getText().toString();
-        tblist.add(getTbub(userName, ChatRecyclerAdapter.TO_USER_MSG, content, null, null,
-                null, null, null, 0f, SendState.COMPLETED));
+        tblist.add(getTbub(userName, ChatListViewAdapter.TO_USER_MSG, content, null, null,
+                null, null, null, 0f, ChatBean.SendState.COMPLETED));
         sendMessageHandler.sendEmptyMessage(SEND_OK);
         this.content = content;
         receriveHandler.sendEmptyMessageDelayed(0, 1000);
@@ -886,7 +885,7 @@ public class ChatActivity extends AppCompatActivity {
         String time = returnTime();
         tbub.setUserContent(content);
         tbub.setTime(time);
-        tbub.setType(ChatRecyclerAdapter.FROM_USER_MSG);
+        tbub.setType(ChatListViewAdapter.FROM_USER_MSG);
         tblist.add(tbub);
         sendMessageHandler.sendEmptyMessage(RECERIVE_OK);
     }
@@ -898,14 +897,14 @@ public class ChatActivity extends AppCompatActivity {
 
     private void upImage(String filePath) {
         if (i == 0) {
-            tblist.add(getTbub(userName, ChatRecyclerAdapter.TO_USER_IMG, null, null, null, filePath, null, null,
-                    0f, SendState.SENDING));
+            tblist.add(getTbub(userName, ChatListViewAdapter.TO_USER_IMG, null, null, null, filePath, null, null,
+                    0f, ChatBean.SendState.SENDING));
         } else if (i == 1) {
-            tblist.add(getTbub(userName, ChatRecyclerAdapter.TO_USER_IMG, null, null, null, filePath, null, null,
-                    0f, SendState.SENDERROR));
+            tblist.add(getTbub(userName, ChatListViewAdapter.TO_USER_IMG, null, null, null, filePath, null, null,
+                    0f, ChatBean.SendState.SENDERROR));
         } else if (i == 2) {
-            tblist.add(getTbub(userName, ChatRecyclerAdapter.TO_USER_IMG, null, null, null, filePath, null, null,
-                    0f, SendState.COMPLETED));
+            tblist.add(getTbub(userName, ChatListViewAdapter.TO_USER_IMG, null, null, null, filePath, null, null,
+                    0f, ChatBean.SendState.COMPLETED));
             i = -1;
         }
         sendMessageHandler.sendEmptyMessage(SEND_OK);
@@ -925,7 +924,7 @@ public class ChatActivity extends AppCompatActivity {
         String time = returnTime();
         tbub.setTime(time);
         tbub.setImageLocal(filePath);
-        tbub.setType(ChatRecyclerAdapter.FROM_USER_IMG);
+        tbub.setType(ChatListViewAdapter.FROM_USER_IMG);
         tblist.add(tbub);
         sendMessageHandler.sendEmptyMessage(RECERIVE_OK);
     }
@@ -934,8 +933,8 @@ public class ChatActivity extends AppCompatActivity {
      * 发送语音
      */
     private void upVoice(float seconds, String filePath) {
-        tblist.add(getTbub(userName, ChatRecyclerAdapter.TO_USER_VOICE, null, null, null, null, filePath,
-                null, seconds, SendState.SENDING));
+        tblist.add(getTbub(userName, ChatListViewAdapter.TO_USER_VOICE, null, null, null, null, filePath,
+                null, seconds, ChatBean.SendState.SENDING));
         sendMessageHandler.sendEmptyMessage(SEND_OK);
         this.seconds = seconds;
         voiceFilePath = filePath;
@@ -956,7 +955,7 @@ public class ChatActivity extends AppCompatActivity {
         tbub.setUserVoiceTime(seconds);
         tbub.setUserVoicePath(filePath);
         tbAdapter.unReadPosition.add(tblist.size() + "");
-        tbub.setType(ChatRecyclerAdapter.FROM_USER_VOICE);
+        tbub.setType(ChatListViewAdapter.FROM_USER_VOICE);
         tblist.add(tbub);
         sendMessageHandler.sendEmptyMessage(RECERIVE_OK);
     }
