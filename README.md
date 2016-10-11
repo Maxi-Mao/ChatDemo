@@ -30,6 +30,14 @@
 
 ##详细说明
 
+ListView:
+
+![image](https://github.com/Maxi-Mao/ChatDemo/blob/master/ChatIMG/uml1.png)
+
+RecyclerView:
+
+![image](https://github.com/Maxi-Mao/ChatDemo/blob/master/ChatIMG/uml2.png)
+
 ###主要：
 * ChatActivity:聊天界面
 * ChatListViewAdapter:ListView聊天界面适配器
