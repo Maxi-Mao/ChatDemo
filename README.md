@@ -84,3 +84,19 @@ RecyclerView适配器:ChatRecyclerAdapter
 ##后记：
 
 该项目也是将之前做过的一些东西汇合了一下，时间比较短，大家就看一下具体的实现方式吧，可能有点乱，有时间的话我整理一下。
+
+## License
+
+    Copyright 2016 maojiqing
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
