@@ -16,6 +16,34 @@
 
 ![image](https://github.com/Maxi-Mao/ChatDemo/blob/master/ChatIMG/voice.gif)
 
+##注：RecyclerView仍在完善中，若急需使用建议使用ListView。
+
+##16/10/15更新：
+
+* 添加消息数据库，用于保存聊天记录。 数据库用的是GreenDao。数据分页加载。
+
+因为是个Demo，所以ListView和RecyclerView用的同一个表，大家只需看实现方式即可。
+
+##16/10/10更新：
+
+* 添加ListView的实现方式：PullToRefreshListView
+
+PullToRefreshRecyclerView为RecyclerView的实现方式，若想切换ListView则需对ChatActivity和PullToRefreshLayout等做修改和一些属性修改。
+
+ListView适配器:ChatListViewAdapter
+
+RecyclerView适配器:ChatRecyclerAdapter
+
+##16/9/30更新：
+
+* 界面由ListView改为RecyclerView
+
+* 增加添加item动画
+
+* 修复界面随键盘弹起问题，类似微信。
+
+* 优化界面，提升用户体验
+
 ##介绍：
 * 该项目是一个聊天界面，封装了包括文字、表情、图片和语音信息。
 * 支持静态表情，gif表情，文字表情混排。图文混排实现参考：[Android聊天实现图文混编（包括gif显示）](http://blog.csdn.net/omrapollo/article/details/50586902)
@@ -58,28 +86,6 @@ RecyclerView:
 为了优化性能，滑动的过程中gif为静态显示。
 
 文字发送按钮为键盘中的回车。
-
-##16/9/30更新：
-
-* 界面由ListView改为RecyclerView
-
-* 增加添加item动画
-
-* 修复界面随键盘弹起问题，类似微信。
-
-* 优化界面，提升用户体验
-
-##16/10/10更新：
-
-* 添加ListView的实现方式：PullToRefreshListView
-
-PullToRefreshRecyclerView为RecyclerView的实现方式，若想切换ListView则需对ChatActivity和PullToRefreshLayout等做修改和一些属性修改。
-
-ListView适配器:ChatListViewAdapter
-
-RecyclerView适配器:ChatRecyclerAdapter
-
-##注：RecyclerView仍在完善中，若急需使用建议使用ListView。
 
 ##后记：
 
