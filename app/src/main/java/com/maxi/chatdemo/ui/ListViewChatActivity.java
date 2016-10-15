@@ -33,7 +33,9 @@ import com.maxi.chatdemo.adapter.ChatListViewAdapter;
 import com.maxi.chatdemo.adapter.DataAdapter;
 import com.maxi.chatdemo.adapter.ExpressionAdapter;
 import com.maxi.chatdemo.adapter.ExpressionPagerAdapter;
-import com.maxi.chatdemo.entity.ChatBean;
+import com.maxi.chatdemo.common.ChatConst;
+import com.maxi.chatdemo.db.ChatDbManager;
+import com.maxi.chatdemo.db.ChatMessageBean;
 import com.maxi.chatdemo.utils.FileSaveUtil;
 import com.maxi.chatdemo.utils.ImageCheckoutUtil;
 import com.maxi.chatdemo.utils.KeyBoardUtils;
@@ -91,8 +93,9 @@ public class ListViewChatActivity extends AppCompatActivity {
     private String permissionInfo;
     private String camPicPath;
     private String item[] = {"你好!", "我正忙着呢,等等", "有啥事吗？", "有时间聊聊吗", "再见！"};
-    private List<ChatBean> tblist = new ArrayList<ChatBean>();
+    private List<ChatMessageBean> tblist = new ArrayList<ChatMessageBean>();
     private List<String> reslist;
+    private ChatDbManager mChatDbManager;
     private static final int SDK_PERMISSION_REQUEST = 127;
     private static final int IMAGE_SIZE = 100 * 1024;// 300kb
     private static final int SEND_OK = 0x1110;
@@ -216,6 +219,12 @@ public class ListViewChatActivity extends AppCompatActivity {
         super.onResume();
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        cancelToast();
+    }
+
     @SuppressLint({"NewApi", "InflateParams"})
     private void initpop() {
         mess_lv = (ListView) findViewById(R.id.mess_lv);
@@ -235,6 +244,7 @@ public class ListViewChatActivity extends AppCompatActivity {
     }
 
     private void init() {
+        mChatDbManager = new ChatDbManager();
         PullToRefreshLayout.pulltorefreshNotifier pullNotifier = new PullToRefreshLayout.pulltorefreshNotifier() {
             @Override
             public void onPull() {
@@ -254,7 +264,7 @@ public class ListViewChatActivity extends AppCompatActivity {
             @Override
             public void onClick(int position) {
                 // TODO Auto-generated method stub
-                ChatBean tbub = tblist.get(position);
+                ChatMessageBean tbub = tblist.get(position);
                 if (tbub.getType() == ChatListViewAdapter.TO_USER_VOICE) {
                     upVoice(tbub.getUserVoiceTime(), tbub.getUserVoicePath());
                     tblist.remove(position);
@@ -502,6 +512,9 @@ public class ListViewChatActivity extends AppCompatActivity {
         });
 //        controlKeyboardLayout(activityRootView, pullList);
         bottomStatusHeight = ScreenUtil.getBottomStatusHeight(this);
+        //加载本地聊天记录
+        page = (int) mChatDbManager.getPages(number);
+        loadRecords();
     }
 
 //    /**
@@ -545,21 +558,40 @@ public class ListViewChatActivity extends AppCompatActivity {
 //        });
 //    }
 
+    private int page = 0;
+    private int number = 10;
+    private List<ChatMessageBean> pagelist = new ArrayList<ChatMessageBean>();
+
+    private void loadRecords() {
+        isDown = true;
+        if (pagelist != null) {
+            pagelist.clear();
+        }
+        pagelist = mChatDbManager.loadPages(page, number);
+        if (pagelist.size() != 0) {
+            handler.sendEmptyMessage(1);
+            if (page == 0) {
+                pullList.refreshComplete();
+                pullList.setPullGone();
+            } else {
+                page--;
+            }
+        } else {
+            if (page == 0) {
+                pullList.refreshComplete();
+                pullList.setPullGone();
+            }
+        }
+    }
+
     private void downLoad() {
         if (!isDown) {
-            isDown = true;
             new Thread(new Runnable() {
 
                 @Override
                 public void run() {
                     // TODO Auto-generated method stub
-                    try {
-                        Thread.sleep(2000);
-                        handler.sendEmptyMessage(1);
-                    } catch (InterruptedException e) {
-//						 TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
+                    loadRecords();
                 }
             }).start();
         }
@@ -586,7 +618,13 @@ public class ListViewChatActivity extends AppCompatActivity {
             super.handleMessage(msg);
             switch (msg.what) {
                 case 1:
+                    int position = pagelist.size();
+                    pagelist.addAll(tblist);
+                    tblist.clear();
+                    tblist.addAll(pagelist);
                     pullList.refreshComplete();
+                    tbAdapter.notifyDataSetChanged();
+                    myList.setSelection(position - 1);
                     isDown = false;
                     break;
                 default:
@@ -867,10 +905,11 @@ public class ListViewChatActivity extends AppCompatActivity {
     private void sendMsgText() {
         String content = mEditTextContent.getText().toString();
         tblist.add(getTbub(userName, ChatListViewAdapter.TO_USER_MSG, content, null, null,
-                null, null, null, 0f, ChatBean.SendState.COMPLETED));
+                null, null, null, 0f, ChatConst.COMPLETED));
         sendMessageHandler.sendEmptyMessage(SEND_OK);
         this.content = content;
         receriveHandler.sendEmptyMessageDelayed(0, 1000);
+
     }
 
     /**
@@ -880,7 +919,7 @@ public class ListViewChatActivity extends AppCompatActivity {
 
     private void receriveMsgText(String content) {
         content = "回复：" + content;
-        ChatBean tbub = new ChatBean();
+        ChatMessageBean tbub = new ChatMessageBean();
         tbub.setUserName(userName);
         String time = returnTime();
         tbub.setUserContent(content);
@@ -888,6 +927,7 @@ public class ListViewChatActivity extends AppCompatActivity {
         tbub.setType(ChatListViewAdapter.FROM_USER_MSG);
         tblist.add(tbub);
         sendMessageHandler.sendEmptyMessage(RECERIVE_OK);
+        mChatDbManager.insert(tbub);
     }
 
     /**
@@ -898,13 +938,13 @@ public class ListViewChatActivity extends AppCompatActivity {
     private void upImage(String filePath) {
         if (i == 0) {
             tblist.add(getTbub(userName, ChatListViewAdapter.TO_USER_IMG, null, null, null, filePath, null, null,
-                    0f, ChatBean.SendState.SENDING));
+                    0f, ChatConst.SENDING));
         } else if (i == 1) {
             tblist.add(getTbub(userName, ChatListViewAdapter.TO_USER_IMG, null, null, null, filePath, null, null,
-                    0f, ChatBean.SendState.SENDERROR));
+                    0f, ChatConst.SENDERROR));
         } else if (i == 2) {
             tblist.add(getTbub(userName, ChatListViewAdapter.TO_USER_IMG, null, null, null, filePath, null, null,
-                    0f, ChatBean.SendState.COMPLETED));
+                    0f, ChatConst.COMPLETED));
             i = -1;
         }
         sendMessageHandler.sendEmptyMessage(SEND_OK);
@@ -919,7 +959,7 @@ public class ListViewChatActivity extends AppCompatActivity {
     String filePath = "";
 
     private void receriveImageText(String filePath) {
-        ChatBean tbub = new ChatBean();
+        ChatMessageBean tbub = new ChatMessageBean();
         tbub.setUserName(userName);
         String time = returnTime();
         tbub.setTime(time);
@@ -927,6 +967,7 @@ public class ListViewChatActivity extends AppCompatActivity {
         tbub.setType(ChatListViewAdapter.FROM_USER_IMG);
         tblist.add(tbub);
         sendMessageHandler.sendEmptyMessage(RECERIVE_OK);
+        mChatDbManager.insert(tbub);
     }
 
     /**
@@ -934,7 +975,7 @@ public class ListViewChatActivity extends AppCompatActivity {
      */
     private void upVoice(float seconds, String filePath) {
         tblist.add(getTbub(userName, ChatListViewAdapter.TO_USER_VOICE, null, null, null, null, filePath,
-                null, seconds, ChatBean.SendState.SENDING));
+                null, seconds, ChatConst.SENDING));
         sendMessageHandler.sendEmptyMessage(SEND_OK);
         this.seconds = seconds;
         voiceFilePath = filePath;
@@ -948,7 +989,7 @@ public class ListViewChatActivity extends AppCompatActivity {
     String voiceFilePath = "";
 
     private void receriveVoiceText(float seconds, String filePath) {
-        ChatBean tbub = new ChatBean();
+        ChatMessageBean tbub = new ChatMessageBean();
         tbub.setUserName(userName);
         String time = returnTime();
         tbub.setTime(time);
@@ -958,6 +999,7 @@ public class ListViewChatActivity extends AppCompatActivity {
         tbub.setType(ChatListViewAdapter.FROM_USER_VOICE);
         tblist.add(tbub);
         sendMessageHandler.sendEmptyMessage(RECERIVE_OK);
+        mChatDbManager.insert(tbub);
     }
 
     /**
@@ -983,11 +1025,11 @@ public class ListViewChatActivity extends AppCompatActivity {
         }
     };
 
-    private ChatBean getTbub(String username, int type,
-                             String Content, String imageIconUrl, String imageUrl,
-                             String imageLocal, String userVoicePath, String userVoiceUrl,
-                             Float userVoiceTime, ChatBean.SendState sendState) {
-        ChatBean tbub = new ChatBean();
+    private ChatMessageBean getTbub(String username, int type,
+                                    String Content, String imageIconUrl, String imageUrl,
+                                    String imageLocal, String userVoicePath, String userVoiceUrl,
+                                    Float userVoiceTime, @ChatConst.SendState int sendState) {
+        ChatMessageBean tbub = new ChatMessageBean();
         tbub.setUserName(username);
         String time = returnTime();
         tbub.setTime(time);
@@ -1000,6 +1042,8 @@ public class ListViewChatActivity extends AppCompatActivity {
         tbub.setUserVoiceTime(userVoiceTime);
         tbub.setSendState(sendState);
         tbub.setImageLocal(imageLocal);
+        mChatDbManager.insert(tbub);
+
         return tbub;
     }
 

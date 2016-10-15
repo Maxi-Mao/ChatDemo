@@ -24,7 +24,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.maxi.chatdemo.R;
-import com.maxi.chatdemo.entity.ChatBean;
+import com.maxi.chatdemo.common.ChatConst;
+import com.maxi.chatdemo.db.ChatMessageBean;
 import com.maxi.chatdemo.ui.ImageViewActivity;
 import com.maxi.chatdemo.utils.FileSaveUtil;
 import com.maxi.chatdemo.widget.BubbleImageView;
@@ -49,7 +50,7 @@ import java.util.List;
 public class ChatRecyclerAdapter extends
         RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private Context context;
-    private List<ChatBean> userList = new ArrayList<ChatBean>();
+    private List<ChatMessageBean> userList = new ArrayList<ChatMessageBean>();
     public static final int FROM_USER_MSG = 0;//接收消息类型
     public static final int TO_USER_MSG = 1;//发送消息类型
     public static final int FROM_USER_IMG = 2;//接收消息类型
@@ -84,7 +85,7 @@ public class ChatRecyclerAdapter extends
         this.voiceIsRead = voiceIsRead;
     }
 
-    public ChatRecyclerAdapter(Context context, List<ChatBean> userList) {
+    public ChatRecyclerAdapter(Context context, List<ChatMessageBean> userList) {
         this.context = context;
         this.userList = userList;
         mLayoutInflater = LayoutInflater.from(context);
@@ -274,7 +275,7 @@ public class ChatRecyclerAdapter extends
      */
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-        ChatBean tbub = userList.get(position);
+        ChatMessageBean tbub = userList.get(position);
         int itemViewType = getItemViewType(position);
         switch (itemViewType) {
             case FROM_USER_MSG:
@@ -308,7 +309,7 @@ public class ChatRecyclerAdapter extends
         return userList.size();
     }
 
-    private void fromMsgUserLayout(final FromUserMsgViewHolder holder, final ChatBean tbub, final int position) {
+    private void fromMsgUserLayout(final FromUserMsgViewHolder holder, final ChatMessageBean tbub, final int position) {
         holder.headicon.setBackgroundResource(R.mipmap.tongbao_hiv);
         /* time */
         if (position != 0) {
@@ -329,7 +330,7 @@ public class ChatRecyclerAdapter extends
         holder.content.setSpanText(handler, tbub.getUserContent(), isGif);
     }
 
-    private void fromImgUserLayout(final FromUserImageViewHolder holder, final ChatBean tbub, final int position) {
+    private void fromImgUserLayout(final FromUserImageViewHolder holder, final ChatMessageBean tbub, final int position) {
         holder.headicon.setBackgroundResource(R.mipmap.tongbao_hiv);
         /* time */
         if (position != 0) {
@@ -388,7 +389,7 @@ public class ChatRecyclerAdapter extends
 
     }
 
-    private void fromVoiceUserLayout(final FromUserVoiceViewHolder holder, final ChatBean tbub, final int position) {
+    private void fromVoiceUserLayout(final FromUserVoiceViewHolder holder, final ChatMessageBean tbub, final int position) {
         holder.headicon.setBackgroundResource(R.mipmap.tongbao_hiv);
         /* time */
         if (position != 0) {
@@ -484,7 +485,7 @@ public class ChatRecyclerAdapter extends
         holder.voice_image.setLayoutParams(lParams);
     }
 
-    private void toMsgUserLayout(final ToUserMsgViewHolder holder, final ChatBean tbub, final int position) {
+    private void toMsgUserLayout(final ToUserMsgViewHolder holder, final ChatMessageBean tbub, final int position) {
         holder.headicon.setBackgroundResource(R.mipmap.grzx_tx_s);
         holder.headicon.setImageDrawable(context.getResources()
                 .getDrawable(R.mipmap.grzx_tx_s));
@@ -508,10 +509,10 @@ public class ChatRecyclerAdapter extends
         holder.content.setSpanText(handler, tbub.getUserContent(), isGif);
     }
 
-    private void toImgUserLayout(final ToUserImgViewHolder holder, final ChatBean tbub, final int position) {
+    private void toImgUserLayout(final ToUserImgViewHolder holder, final ChatMessageBean tbub, final int position) {
         holder.headicon.setBackgroundResource(R.mipmap.grzx_tx_s);
         switch (tbub.getSendState()) {
-            case SENDING:
+            case ChatConst.SENDING:
                 an = AnimationUtils.loadAnimation(context,
                         R.anim.update_loading_progressbar_anim);
                 LinearInterpolator lin = new LinearInterpolator();
@@ -524,12 +525,12 @@ public class ChatRecyclerAdapter extends
                 holder.sendFailImg.setVisibility(View.VISIBLE);
                 break;
 
-            case COMPLETED:
+            case ChatConst.COMPLETED:
                 holder.sendFailImg.clearAnimation();
                 holder.sendFailImg.setVisibility(View.GONE);
                 break;
 
-            case SENDERROR:
+            case ChatConst.SENDERROR:
                 holder.sendFailImg.clearAnimation();
                 holder.sendFailImg
                         .setBackgroundResource(R.mipmap.msg_state_fail_resend_pressed);
@@ -610,10 +611,10 @@ public class ChatRecyclerAdapter extends
         }
     }
 
-    private void toVoiceUserLayout(final ToUserVoiceViewHolder holder, final ChatBean tbub, final int position) {
+    private void toVoiceUserLayout(final ToUserVoiceViewHolder holder, final ChatMessageBean tbub, final int position) {
         holder.headicon.setBackgroundResource(R.mipmap.grzx_tx_s);
         switch (tbub.getSendState()) {
-            case SENDING:
+            case ChatConst.SENDING:
                 an = AnimationUtils.loadAnimation(context,
                         R.anim.update_loading_progressbar_anim);
                 LinearInterpolator lin = new LinearInterpolator();
@@ -626,12 +627,12 @@ public class ChatRecyclerAdapter extends
                 holder.sendFailImg.setVisibility(View.VISIBLE);
                 break;
 
-            case COMPLETED:
+            case ChatConst.COMPLETED:
                 holder.sendFailImg.clearAnimation();
                 holder.sendFailImg.setVisibility(View.GONE);
                 break;
 
-            case SENDERROR:
+            case ChatConst.SENDERROR:
                 holder.sendFailImg.clearAnimation();
                 holder.sendFailImg
                         .setBackgroundResource(R.mipmap.msg_state_fail_resend_pressed);

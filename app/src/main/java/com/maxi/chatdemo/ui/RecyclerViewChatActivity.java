@@ -38,8 +38,9 @@ import com.maxi.chatdemo.adapter.DataAdapter;
 import com.maxi.chatdemo.adapter.ExpressionAdapter;
 import com.maxi.chatdemo.adapter.ExpressionPagerAdapter;
 import com.maxi.chatdemo.animator.SlideInOutBottomItemAnimator;
-import com.maxi.chatdemo.entity.ChatBean;
-import com.maxi.chatdemo.entity.ChatBean.SendState;
+import com.maxi.chatdemo.common.ChatConst;
+import com.maxi.chatdemo.db.ChatDbManager;
+import com.maxi.chatdemo.db.ChatMessageBean;
 import com.maxi.chatdemo.utils.FileSaveUtil;
 import com.maxi.chatdemo.utils.ImageCheckoutUtil;
 import com.maxi.chatdemo.utils.KeyBoardUtils;
@@ -95,8 +96,9 @@ public class RecyclerViewChatActivity extends AppCompatActivity {
     private String permissionInfo;
     private String camPicPath;
     private String item[] = {"你好!", "我正忙着呢,等等", "有啥事吗？", "有时间聊聊吗", "再见！"};
-    private List<ChatBean> tblist = new ArrayList<ChatBean>();
+    private List<ChatMessageBean> tblist = new ArrayList<ChatMessageBean>();
     private List<String> reslist;
+    private ChatDbManager mChatDbManager;
     private static final int SDK_PERMISSION_REQUEST = 127;
     private static final int IMAGE_SIZE = 100 * 1024;// 300kb
     private static final int SEND_OK = 0x1110;
@@ -186,7 +188,7 @@ public class RecyclerViewChatActivity extends AppCompatActivity {
                     Toast.makeText(RecyclerViewChatActivity.this, "禁用图片权限将导致发送图片功能无法使用！", Toast.LENGTH_SHORT)
                             .show();
                 }
-                if(perms.get(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED){
+                if (perms.get(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                     CAN_RECORD_AUDIO = false;
                     Toast.makeText(RecyclerViewChatActivity.this, "禁用录制音频权限将导致语音功能无法使用！", Toast.LENGTH_SHORT)
                             .show();
@@ -239,6 +241,7 @@ public class RecyclerViewChatActivity extends AppCompatActivity {
     }
 
     private void init() {
+        mChatDbManager = new ChatDbManager();
         PullToRefreshLayout.pulltorefreshNotifier pullNotifier = new PullToRefreshLayout.pulltorefreshNotifier() {
             @Override
             public void onPull() {
@@ -260,7 +263,7 @@ public class RecyclerViewChatActivity extends AppCompatActivity {
             @Override
             public void onClick(int position) {
                 // TODO Auto-generated method stub
-                ChatBean tbub = tblist.get(position);
+                ChatMessageBean tbub = tblist.get(position);
                 if (tbub.getType() == ChatRecyclerAdapter.TO_USER_VOICE) {
                     upVoice(tbub.getUserVoiceTime(), tbub.getUserVoicePath());
                     tblist.remove(position);
@@ -361,9 +364,9 @@ public class RecyclerViewChatActivity extends AppCompatActivity {
             public void onClick(int from) {
                 switch (from) {
                     case ChatBottomView.FROM_CAMERA:
-                        if(!CAN_WRITE_EXTERNAL_STORAGE){
-                            Toast.makeText(RecyclerViewChatActivity.this,"权限未开通\n请到设置中开通相册权限",Toast.LENGTH_SHORT).show();
-                        }else {
+                        if (!CAN_WRITE_EXTERNAL_STORAGE) {
+                            Toast.makeText(RecyclerViewChatActivity.this, "权限未开通\n请到设置中开通相册权限", Toast.LENGTH_SHORT).show();
+                        } else {
                             final String state = Environment.getExternalStorageState();
                             if (Environment.MEDIA_MOUNTED.equals(state)) {
                                 camPicPath = getSavePicPath();
@@ -379,9 +382,9 @@ public class RecyclerViewChatActivity extends AppCompatActivity {
                         }
                         break;
                     case ChatBottomView.FROM_GALLERY:
-                        if(!CAN_WRITE_EXTERNAL_STORAGE){
-                            Toast.makeText(RecyclerViewChatActivity.this,"权限未开通\n请到设置中开通相册权限",Toast.LENGTH_SHORT).show();
-                        }else {
+                        if (!CAN_WRITE_EXTERNAL_STORAGE) {
+                            Toast.makeText(RecyclerViewChatActivity.this, "权限未开通\n请到设置中开通相册权限", Toast.LENGTH_SHORT).show();
+                        } else {
                             String status = Environment.getExternalStorageState();
                             if (status.equals(Environment.MEDIA_MOUNTED)) {// 判断是否有SD卡
                                 Intent intent = new Intent();
@@ -506,6 +509,9 @@ public class RecyclerViewChatActivity extends AppCompatActivity {
         });
         controlKeyboardLayout(activityRootView, pullList);
         bottomStatusHeight = ScreenUtil.getBottomStatusHeight(this);
+        //加载本地聊天记录
+        page = (int) mChatDbManager.getPages(number);
+        loadRecords();
     }
 
     /**
@@ -549,6 +555,27 @@ public class RecyclerViewChatActivity extends AppCompatActivity {
         });
     }
 
+    private int page = 0;
+    private int number = 10;
+    private List<ChatMessageBean> pagelist = new ArrayList<ChatMessageBean>();
+
+    private void loadRecords() {
+        isDown = true;
+        if (pagelist != null) {
+            pagelist.clear();
+        }
+        pagelist = mChatDbManager.loadPages(page, number);
+        if (pagelist.size() != 0) {
+            handler.sendEmptyMessage(1);
+            if (page == 0) {
+                pullList.refreshComplete();
+                pullList.setPullGone();
+            } else {
+                page--;
+            }
+        }
+    }
+
     private void downLoad() {
         if (!isDown) {
             isDown = true;
@@ -557,13 +584,7 @@ public class RecyclerViewChatActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     // TODO Auto-generated method stub
-                    try {
-                        Thread.sleep(2000);
-                        handler.sendEmptyMessage(1);
-                    } catch (InterruptedException e) {
-//						 TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
+                    loadRecords();
                 }
             }).start();
         }
@@ -590,7 +611,13 @@ public class RecyclerViewChatActivity extends AppCompatActivity {
             super.handleMessage(msg);
             switch (msg.what) {
                 case 1:
+                    int position = pagelist.size();
+                    pagelist.addAll(tblist);
+                    tblist.clear();
+                    tblist.addAll(pagelist);
                     pullList.refreshComplete();
+                    tbAdapter.notifyDataSetChanged();
+                    myList.smoothScrollToPosition(position - 1);
                     isDown = false;
                     break;
                 default:
@@ -871,7 +898,7 @@ public class RecyclerViewChatActivity extends AppCompatActivity {
     private void sendMsgText() {
         String content = mEditTextContent.getText().toString();
         tblist.add(getTbub(userName, ChatRecyclerAdapter.TO_USER_MSG, content, null, null,
-                null, null, null, 0f, SendState.COMPLETED));
+                null, null, null, 0f, ChatConst.COMPLETED));
         sendMessageHandler.sendEmptyMessage(SEND_OK);
         this.content = content;
         receriveHandler.sendEmptyMessageDelayed(0, 1000);
@@ -884,7 +911,7 @@ public class RecyclerViewChatActivity extends AppCompatActivity {
 
     private void receriveMsgText(String content) {
         content = "回复：" + content;
-        ChatBean tbub = new ChatBean();
+        ChatMessageBean tbub = new ChatMessageBean();
         tbub.setUserName(userName);
         String time = returnTime();
         tbub.setUserContent(content);
@@ -892,6 +919,7 @@ public class RecyclerViewChatActivity extends AppCompatActivity {
         tbub.setType(ChatRecyclerAdapter.FROM_USER_MSG);
         tblist.add(tbub);
         sendMessageHandler.sendEmptyMessage(RECERIVE_OK);
+        mChatDbManager.insert(tbub);
     }
 
     /**
@@ -902,13 +930,13 @@ public class RecyclerViewChatActivity extends AppCompatActivity {
     private void upImage(String filePath) {
         if (i == 0) {
             tblist.add(getTbub(userName, ChatRecyclerAdapter.TO_USER_IMG, null, null, null, filePath, null, null,
-                    0f, SendState.SENDING));
+                    0f, ChatConst.SENDING));
         } else if (i == 1) {
             tblist.add(getTbub(userName, ChatRecyclerAdapter.TO_USER_IMG, null, null, null, filePath, null, null,
-                    0f, SendState.SENDERROR));
+                    0f, ChatConst.SENDERROR));
         } else if (i == 2) {
             tblist.add(getTbub(userName, ChatRecyclerAdapter.TO_USER_IMG, null, null, null, filePath, null, null,
-                    0f, SendState.COMPLETED));
+                    0f, ChatConst.COMPLETED));
             i = -1;
         }
         sendMessageHandler.sendEmptyMessage(SEND_OK);
@@ -923,7 +951,7 @@ public class RecyclerViewChatActivity extends AppCompatActivity {
     String filePath = "";
 
     private void receriveImageText(String filePath) {
-        ChatBean tbub = new ChatBean();
+        ChatMessageBean tbub = new ChatMessageBean();
         tbub.setUserName(userName);
         String time = returnTime();
         tbub.setTime(time);
@@ -931,6 +959,7 @@ public class RecyclerViewChatActivity extends AppCompatActivity {
         tbub.setType(ChatRecyclerAdapter.FROM_USER_IMG);
         tblist.add(tbub);
         sendMessageHandler.sendEmptyMessage(RECERIVE_OK);
+        mChatDbManager.insert(tbub);
     }
 
     /**
@@ -938,7 +967,7 @@ public class RecyclerViewChatActivity extends AppCompatActivity {
      */
     private void upVoice(float seconds, String filePath) {
         tblist.add(getTbub(userName, ChatRecyclerAdapter.TO_USER_VOICE, null, null, null, null, filePath,
-                null, seconds, SendState.SENDING));
+                null, seconds, ChatConst.SENDING));
         sendMessageHandler.sendEmptyMessage(SEND_OK);
         this.seconds = seconds;
         voiceFilePath = filePath;
@@ -952,7 +981,7 @@ public class RecyclerViewChatActivity extends AppCompatActivity {
     String voiceFilePath = "";
 
     private void receriveVoiceText(float seconds, String filePath) {
-        ChatBean tbub = new ChatBean();
+        ChatMessageBean tbub = new ChatMessageBean();
         tbub.setUserName(userName);
         String time = returnTime();
         tbub.setTime(time);
@@ -962,6 +991,7 @@ public class RecyclerViewChatActivity extends AppCompatActivity {
         tbub.setType(ChatRecyclerAdapter.FROM_USER_VOICE);
         tblist.add(tbub);
         sendMessageHandler.sendEmptyMessage(RECERIVE_OK);
+        mChatDbManager.insert(tbub);
     }
 
     /**
@@ -987,11 +1017,11 @@ public class RecyclerViewChatActivity extends AppCompatActivity {
         }
     };
 
-    private ChatBean getTbub(String username, int type,
-                             String Content, String imageIconUrl, String imageUrl,
-                             String imageLocal, String userVoicePath, String userVoiceUrl,
-                             Float userVoiceTime, ChatBean.SendState sendState) {
-        ChatBean tbub = new ChatBean();
+    private ChatMessageBean getTbub(String username, int type,
+                                    String Content, String imageIconUrl, String imageUrl,
+                                    String imageLocal, String userVoicePath, String userVoiceUrl,
+                                    Float userVoiceTime, @ChatConst.SendState int sendState) {
+        ChatMessageBean tbub = new ChatMessageBean();
         tbub.setUserName(username);
         String time = returnTime();
         tbub.setTime(time);
@@ -1004,6 +1034,7 @@ public class RecyclerViewChatActivity extends AppCompatActivity {
         tbub.setUserVoiceTime(userVoiceTime);
         tbub.setSendState(sendState);
         tbub.setImageLocal(imageLocal);
+        mChatDbManager.insert(tbub);
         return tbub;
     }
 
