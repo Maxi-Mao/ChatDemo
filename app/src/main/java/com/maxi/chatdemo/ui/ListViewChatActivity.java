@@ -867,7 +867,7 @@ public class ListViewChatActivity extends AppCompatActivity {
     public List<String> getExpressionRes(int getSum) {
         List<String> reslist = new ArrayList<String>();
         for (int x = 1; x <= getSum; x++) {
-            String filename = "tb_" + x;
+            String filename = "f" + x;
             reslist.add(filename);
         }
         return reslist;
