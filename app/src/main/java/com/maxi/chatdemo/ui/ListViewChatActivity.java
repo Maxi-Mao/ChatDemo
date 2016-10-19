@@ -94,7 +94,9 @@ public class ListViewChatActivity extends AppCompatActivity {
     private String permissionInfo;
     private String camPicPath;
     private String item[] = {"你好!", "我正忙着呢,等等", "有啥事吗？", "有时间聊聊吗", "再见！"};
-    private List<ChatMessageBean> tblist = new ArrayList<ChatMessageBean>();
+    private List<ChatMessageBean> tblist = new ArrayList<ChatMessageBean>();//adapter聊天数据
+    private ArrayList<String> imageList = new ArrayList<String>();//adapter图片数据
+    private HashMap<Integer, Integer> imagePosition = new HashMap<Integer, Integer>();//图片下标位置
     private List<String> reslist;
     private ChatDbManager mChatDbManager;
     private static final int SDK_PERMISSION_REQUEST = 127;
@@ -225,6 +227,8 @@ public class ListViewChatActivity extends AppCompatActivity {
         MediaManager.pause();
         MediaManager.release();
         tblist.clear();
+        imageList.clear();
+        imagePosition.clear();
         tbAdapter.notifyDataSetChanged();
         myList.setAdapter(null);
         handler.removeCallbacksAndMessages(null);
@@ -577,6 +581,27 @@ public class ListViewChatActivity extends AppCompatActivity {
         }
         pagelist = mChatDbManager.loadPages(page, number);
         if (pagelist.size() != 0) {
+            pagelist.addAll(tblist);
+            tblist.clear();
+            tblist.addAll(pagelist);
+            if (imageList != null) {
+                imageList.clear();
+            }
+            if (imagePosition != null) {
+                imagePosition.clear();
+            }
+            int key = 0;
+            int position = 0;
+            for (ChatMessageBean cmb : tblist) {
+                if (cmb.getType() == ChatListViewAdapter.FROM_USER_IMG || cmb.getType() == ChatListViewAdapter.TO_USER_IMG) {
+                    imageList.add(cmb.getImageLocal());
+                    imagePosition.put(key, position);
+                    position++;
+                }
+                key++;
+            }
+            tbAdapter.setImageList(imageList);
+            tbAdapter.setImagePosition(imagePosition);
             handler.sendEmptyMessage(1);
             if (page == 0) {
                 pullList.refreshComplete();
@@ -627,9 +652,6 @@ public class ListViewChatActivity extends AppCompatActivity {
             switch (msg.what) {
                 case 1:
                     int position = pagelist.size();
-                    pagelist.addAll(tblist);
-                    tblist.clear();
-                    tblist.addAll(pagelist);
                     pullList.refreshComplete();
                     tbAdapter.notifyDataSetChanged();
                     myList.setSelection(position - 1);

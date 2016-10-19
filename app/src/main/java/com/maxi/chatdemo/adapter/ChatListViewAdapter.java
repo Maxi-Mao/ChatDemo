@@ -44,6 +44,7 @@ import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -52,6 +53,8 @@ import java.util.List;
 public class ChatListViewAdapter extends BaseAdapter {
     private Context context;
     private List<ChatMessageBean> userList = new ArrayList<ChatMessageBean>();
+    private ArrayList<String> imageList = new ArrayList<String>();
+    private HashMap<Integer,Integer> imagePosition = new HashMap<Integer,Integer>();
     //    public static int FROM_USER = 0;//接收消息类型
 //    public static int TO_USER = 1;//发送消息类型
 //    public static int TEXT_MSG = 0;//文字表情消息
@@ -126,6 +129,13 @@ public class ChatListViewAdapter extends BaseAdapter {
 
     public void setUserList(List<ChatMessageBean> userList) {
         this.userList = userList;
+    }
+
+    public void setImageList(ArrayList<String> imageList) {
+        this.imageList = imageList;
+    }
+    public void setImagePosition(HashMap<Integer,Integer> imagePosition) {
+        this.imagePosition = imagePosition;
     }
 
     @Override
@@ -396,15 +406,9 @@ public class ChatListViewAdapter extends BaseAdapter {
                 public void onClick(View view) {
                     // TODO Auto-generated method stub
                     stopPlayVoice();
-                    ArrayList<String> mDatas = new ArrayList<String>();
-                    if (hasLocal) {
-                        mDatas.add(imageSrc);
-                    } else {
-                        mDatas.add(imageUrlSrc);
-                    }
                     Intent intent = new Intent(context, ImageViewActivity.class);
-                    intent.putStringArrayListExtra("images", mDatas);
-                    intent.putExtra("clickedIndex", 0);
+                    intent.putStringArrayListExtra("images", imageList);
+                    intent.putExtra("clickedIndex", imagePosition.get(position));
                     context.startActivity(intent);
                 }
 
@@ -619,15 +623,9 @@ public class ChatListViewAdapter extends BaseAdapter {
                 public void onClick(View view) {
                     // TODO Auto-generated method stub
                     stopPlayVoice();
-                    ArrayList<String> mDatas = new ArrayList<String>();
-                    if (hasLocal) {
-                        mDatas.add(imageSrc);
-                    } else {
-                        mDatas.add(imageUrlSrc);
-                    }
                     Intent intent = new Intent(context, ImageViewActivity.class);
-                    intent.putStringArrayListExtra("images", mDatas);
-                    intent.putExtra("clickedIndex", 0);
+                    intent.putStringArrayListExtra("images", imageList);
+                    intent.putExtra("clickedIndex", imagePosition.get(position));
                     context.startActivity(intent);
                 }
 
