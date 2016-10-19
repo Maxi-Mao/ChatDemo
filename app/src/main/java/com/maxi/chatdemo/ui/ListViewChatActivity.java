@@ -46,6 +46,7 @@ import com.maxi.chatdemo.widget.AudioRecordButton;
 import com.maxi.chatdemo.widget.ChatBottomView;
 import com.maxi.chatdemo.widget.ExpandGridView;
 import com.maxi.chatdemo.widget.HeadIconSelectorView;
+import com.maxi.chatdemo.widget.MediaManager;
 import com.maxi.chatdemo.widget.pulltorefresh.PullToRefreshLayout;
 import com.maxi.chatdemo.widget.pulltorefresh.PullToRefreshListView;
 import com.maxi.chatdemo.widget.pulltorefresh.base.PullToRefreshView;
@@ -221,6 +222,13 @@ public class ListViewChatActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        MediaManager.pause();
+        MediaManager.release();
+        tblist.clear();
+        tbAdapter.notifyDataSetChanged();
+        myList.setAdapter(null);
+        handler.removeCallbacksAndMessages(null);
+        sendMessageHandler.removeCallbacksAndMessages(null);
         super.onDestroy();
         cancelToast();
     }

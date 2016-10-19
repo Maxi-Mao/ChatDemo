@@ -51,6 +51,7 @@ import com.maxi.chatdemo.widget.AudioRecordButton;
 import com.maxi.chatdemo.widget.ChatBottomView;
 import com.maxi.chatdemo.widget.ExpandGridView;
 import com.maxi.chatdemo.widget.HeadIconSelectorView;
+import com.maxi.chatdemo.widget.MediaManager;
 import com.maxi.chatdemo.widget.pulltorefresh.PullToRefreshLayout;
 import com.maxi.chatdemo.widget.pulltorefresh.PullToRefreshRecyclerView;
 import com.maxi.chatdemo.widget.pulltorefresh.WrapContentLinearLayoutManager;
@@ -220,6 +221,19 @@ public class RecyclerViewChatActivity extends AppCompatActivity {
     protected void onResume() {
         // TODO Auto-generated method stub
         super.onResume();
+    }
+
+    @Override
+    protected void onDestroy() {
+        MediaManager.pause();
+        MediaManager.release();
+        tblist.clear();
+        tbAdapter.notifyDataSetChanged();
+        myList.setAdapter(null);
+        handler.removeCallbacksAndMessages(null);
+        sendMessageHandler.removeCallbacksAndMessages(null);
+        super.onDestroy();
+        cancelToast();
     }
 
     @SuppressLint({"NewApi", "InflateParams"})
