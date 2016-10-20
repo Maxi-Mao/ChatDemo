@@ -1,6 +1,5 @@
 package com.maxi.chatdemo.ui;
 
-import android.annotation.SuppressLint;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Handler;
@@ -23,7 +22,6 @@ import com.maxi.chatdemo.widget.pulltorefresh.WrapContentLinearLayoutManager;
 import com.maxi.chatdemo.widget.pulltorefresh.base.PullToRefreshView;
 
 import java.lang.ref.WeakReference;
-import java.text.SimpleDateFormat;
 
 public class RecyclerViewChatActivity extends BaseActivity {
     private PullToRefreshRecyclerView myList;
@@ -283,12 +281,17 @@ public class RecyclerViewChatActivity extends BaseActivity {
      */
     @Override
     protected void sendMessage() {
-        String content = mEditTextContent.getText().toString();
-        tblist.add(getTbub(userName, ChatRecyclerAdapter.TO_USER_MSG, content, null, null,
-                null, null, null, 0f, ChatConst.COMPLETED));
-        sendMessageHandler.sendEmptyMessage(SEND_OK);
-        this.content = content;
-        receriveHandler.sendEmptyMessageDelayed(0, 1000);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                String content = mEditTextContent.getText().toString();
+                tblist.add(getTbub(userName, ChatListViewAdapter.TO_USER_MSG, content, null, null,
+                        null, null, null, 0f, ChatConst.COMPLETED));
+                sendMessageHandler.sendEmptyMessage(SEND_OK);
+                RecyclerViewChatActivity.this.content = content;
+                receriveHandler.sendEmptyMessageDelayed(0, 1000);
+            }
+        }).start();
     }
 
     /**
@@ -296,17 +299,22 @@ public class RecyclerViewChatActivity extends BaseActivity {
      */
     String content = "";
 
-    private void receriveMsgText(String content) {
-        content = "回复：" + content;
-        ChatMessageBean tbub = new ChatMessageBean();
-        tbub.setUserName(userName);
-        String time = returnTime();
-        tbub.setUserContent(content);
-        tbub.setTime(time);
-        tbub.setType(ChatRecyclerAdapter.FROM_USER_MSG);
-        tblist.add(tbub);
-        sendMessageHandler.sendEmptyMessage(RECERIVE_OK);
-        mChatDbManager.insert(tbub);
+    private void receriveMsgText(final String content) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                String message = "回复：" + content;
+                ChatMessageBean tbub = new ChatMessageBean();
+                tbub.setUserName(userName);
+                String time = returnTime();
+                tbub.setUserContent(message);
+                tbub.setTime(time);
+                tbub.setType(ChatListViewAdapter.FROM_USER_MSG);
+                tblist.add(tbub);
+                sendMessageHandler.sendEmptyMessage(RECERIVE_OK);
+                mChatDbManager.insert(tbub);
+            }
+        }).start();
     }
 
     /**
@@ -315,22 +323,29 @@ public class RecyclerViewChatActivity extends BaseActivity {
     int i = 0;
 
     @Override
-    protected void sendImage(String filePath) {
-        if (i == 0) {
-            tblist.add(getTbub(userName, ChatRecyclerAdapter.TO_USER_IMG, null, null, null, filePath, null, null,
-                    0f, ChatConst.SENDING));
-        } else if (i == 1) {
-            tblist.add(getTbub(userName, ChatRecyclerAdapter.TO_USER_IMG, null, null, null, filePath, null, null,
-                    0f, ChatConst.SENDERROR));
-        } else if (i == 2) {
-            tblist.add(getTbub(userName, ChatRecyclerAdapter.TO_USER_IMG, null, null, null, filePath, null, null,
-                    0f, ChatConst.COMPLETED));
-            i = -1;
-        }
-        sendMessageHandler.sendEmptyMessage(SEND_OK);
-        this.filePath = filePath;
-        receriveHandler.sendEmptyMessageDelayed(1, 3000);
-        i++;
+    protected void sendImage(final String filePath) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                if (i == 0) {
+                    tblist.add(getTbub(userName, ChatListViewAdapter.TO_USER_IMG, null, null, null, filePath, null, null,
+                            0f, ChatConst.SENDING));
+                } else if (i == 1) {
+                    tblist.add(getTbub(userName, ChatListViewAdapter.TO_USER_IMG, null, null, null, filePath, null, null,
+                            0f, ChatConst.SENDERROR));
+                } else if (i == 2) {
+                    tblist.add(getTbub(userName, ChatListViewAdapter.TO_USER_IMG, null, null, null, filePath, null, null,
+                            0f, ChatConst.COMPLETED));
+                    i = -1;
+                }
+                imageList.add(tblist.get(tblist.size() - 1).getImageLocal());
+                imagePosition.put(tblist.size() - 1, imageList.size() - 1);
+                sendMessageHandler.sendEmptyMessage(SEND_OK);
+                RecyclerViewChatActivity.this.filePath = filePath;
+                receriveHandler.sendEmptyMessageDelayed(1, 3000);
+                i++;
+            }
+        }).start();
     }
 
     /**
@@ -338,29 +353,41 @@ public class RecyclerViewChatActivity extends BaseActivity {
      */
     String filePath = "";
 
-    private void receriveImageText(String filePath) {
-        ChatMessageBean tbub = new ChatMessageBean();
-        tbub.setUserName(userName);
-        String time = returnTime();
-        tbub.setTime(time);
-        tbub.setImageLocal(filePath);
-        tbub.setType(ChatRecyclerAdapter.FROM_USER_IMG);
-        tblist.add(tbub);
-        sendMessageHandler.sendEmptyMessage(RECERIVE_OK);
-        mChatDbManager.insert(tbub);
+    private void receriveImageText(final String filePath) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                ChatMessageBean tbub = new ChatMessageBean();
+                tbub.setUserName(userName);
+                String time = returnTime();
+                tbub.setTime(time);
+                tbub.setImageLocal(filePath);
+                tbub.setType(ChatListViewAdapter.FROM_USER_IMG);
+                tblist.add(tbub);
+                imageList.add(tblist.get(tblist.size() - 1).getImageLocal());
+                imagePosition.put(tblist.size() - 1, imageList.size() - 1);
+                sendMessageHandler.sendEmptyMessage(RECERIVE_OK);
+                mChatDbManager.insert(tbub);
+            }
+        }).start();
     }
 
     /**
      * 发送语音
      */
     @Override
-    protected void sendVoice(float seconds, String filePath) {
-        tblist.add(getTbub(userName, ChatRecyclerAdapter.TO_USER_VOICE, null, null, null, null, filePath,
-                null, seconds, ChatConst.SENDING));
-        sendMessageHandler.sendEmptyMessage(SEND_OK);
-        this.seconds = seconds;
-        voiceFilePath = filePath;
-        receriveHandler.sendEmptyMessageDelayed(2, 3000);
+    protected void sendVoice(final float seconds, final String filePath) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                tblist.add(getTbub(userName, ChatListViewAdapter.TO_USER_VOICE, null, null, null, null, filePath,
+                        null, seconds, ChatConst.SENDING));
+                sendMessageHandler.sendEmptyMessage(SEND_OK);
+                RecyclerViewChatActivity.this.seconds = seconds;
+                voiceFilePath = filePath;
+                receriveHandler.sendEmptyMessageDelayed(2, 3000);
+            }
+        }).start();
     }
 
     /**
@@ -369,18 +396,23 @@ public class RecyclerViewChatActivity extends BaseActivity {
     float seconds = 0.0f;
     String voiceFilePath = "";
 
-    private void receriveVoiceText(float seconds, String filePath) {
-        ChatMessageBean tbub = new ChatMessageBean();
-        tbub.setUserName(userName);
-        String time = returnTime();
-        tbub.setTime(time);
-        tbub.setUserVoiceTime(seconds);
-        tbub.setUserVoicePath(filePath);
-        tbAdapter.unReadPosition.add(tblist.size() + "");
-        tbub.setType(ChatRecyclerAdapter.FROM_USER_VOICE);
-        tblist.add(tbub);
-        sendMessageHandler.sendEmptyMessage(RECERIVE_OK);
-        mChatDbManager.insert(tbub);
+    private void receriveVoiceText(final float seconds, final String filePath) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                ChatMessageBean tbub = new ChatMessageBean();
+                tbub.setUserName(userName);
+                String time = returnTime();
+                tbub.setTime(time);
+                tbub.setUserVoiceTime(seconds);
+                tbub.setUserVoicePath(filePath);
+                tbAdapter.unReadPosition.add(tblist.size() + "");
+                tbub.setType(ChatListViewAdapter.FROM_USER_VOICE);
+                tblist.add(tbub);
+                sendMessageHandler.sendEmptyMessage(RECERIVE_OK);
+                mChatDbManager.insert(tbub);
+            }
+        }).start();
     }
 
     /**
@@ -406,11 +438,4 @@ public class RecyclerViewChatActivity extends BaseActivity {
         }
     };
 
-    @SuppressLint("SimpleDateFormat")
-    public static String returnTime() {
-        SimpleDateFormat sDateFormat = new SimpleDateFormat(
-                "yyyy-MM-dd HH:mm:ss");
-        String date = sDateFormat.format(new java.util.Date());
-        return date;
-    }
 }
