@@ -99,6 +99,7 @@ public abstract class BaseActivity extends AppCompatActivity {
     public static final int SEND_OK = 0x1110;
     public static final int REFRESH = 0x0011;
     public static final int RECERIVE_OK = 0x1111;
+    public static final int PULL_TO_REFRESH_DOWN = 0x0111;
 
     /**
      * 发送文本消息

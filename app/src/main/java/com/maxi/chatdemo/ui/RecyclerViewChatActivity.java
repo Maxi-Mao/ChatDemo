@@ -54,7 +54,6 @@ public class RecyclerViewChatActivity extends BaseActivity {
         tblist.clear();
         tbAdapter.notifyDataSetChanged();
         myList.setAdapter(null);
-        handler.removeCallbacksAndMessages(null);
         sendMessageHandler.removeCallbacksAndMessages(null);
         super.onDestroy();
     }
@@ -218,7 +217,7 @@ public class RecyclerViewChatActivity extends BaseActivity {
             }
             tbAdapter.setImageList(imageList);
             tbAdapter.setImagePosition(imagePosition);
-            handler.sendEmptyMessage(1);
+            sendMessageHandler.sendEmptyMessage(PULL_TO_REFRESH_DOWN);
             if (page == 0) {
                 pullList.refreshComplete();
                 pullList.setPullGone();
@@ -232,27 +231,6 @@ public class RecyclerViewChatActivity extends BaseActivity {
             }
         }
     }
-
-    @SuppressLint("HandlerLeak")
-    private Handler handler = new Handler() {
-
-        @Override
-        public void handleMessage(Message msg) {
-            // TODO Auto-generated method stub
-            super.handleMessage(msg);
-            switch (msg.what) {
-                case 1:
-                    pullList.refreshComplete();
-                    tbAdapter.notifyDataSetChanged();
-                    myList.smoothScrollToPosition(position - 1);
-                    isDown = false;
-                    break;
-                default:
-                    break;
-            }
-        }
-
-    };
 
     static class SendMessageHandler extends Handler {
         WeakReference<RecyclerViewChatActivity> mActivity;
@@ -285,6 +263,12 @@ public class RecyclerViewChatActivity extends BaseActivity {
                         theActivity.tbAdapter.notifyItemInserted(theActivity.tblist
                                 .size() - 1);
                         theActivity.myList.smoothScrollToPosition(theActivity.tbAdapter.getItemCount() - 1);
+                        break;
+                    case PULL_TO_REFRESH_DOWN:
+                        theActivity.pullList.refreshComplete();
+                        theActivity.tbAdapter.notifyDataSetChanged();
+                        theActivity.myList.smoothScrollToPosition(theActivity.position - 1);
+                        theActivity.isDown = false;
                         break;
                     default:
                         break;

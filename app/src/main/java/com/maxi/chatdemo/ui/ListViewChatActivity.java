@@ -1,6 +1,5 @@
 package com.maxi.chatdemo.ui;
 
-import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -42,7 +41,6 @@ public class ListViewChatActivity extends BaseActivity {
         tbAdapter.notifyDataSetChanged();
         myList.setAdapter(null);
         sendMessageHandler.removeCallbacksAndMessages(null);
-        handler.removeCallbacksAndMessages(null);
         super.onDestroy();
     }
 
@@ -172,6 +170,12 @@ public class ListViewChatActivity extends BaseActivity {
                         theActivity.myList.setSelection(theActivity.tblist
                                 .size() - 1);
                         break;
+                    case PULL_TO_REFRESH_DOWN:
+                        theActivity.pullList.refreshComplete();
+                        theActivity.tbAdapter.notifyDataSetChanged();
+                        theActivity.myList.setSelection(theActivity.position - 1);
+                        theActivity.isDown = false;
+                        break;
                     default:
                         break;
                 }
@@ -210,7 +214,7 @@ public class ListViewChatActivity extends BaseActivity {
             }
             tbAdapter.setImageList(imageList);
             tbAdapter.setImagePosition(imagePosition);
-            handler.sendEmptyMessage(1);
+            sendMessageHandler.sendEmptyMessage(PULL_TO_REFRESH_DOWN);
             if (page == 0) {
                 pullList.refreshComplete();
                 pullList.setPullGone();
@@ -224,27 +228,6 @@ public class ListViewChatActivity extends BaseActivity {
             }
         }
     }
-
-    @SuppressLint("HandlerLeak")
-    private Handler handler = new Handler() {
-
-        @Override
-        public void handleMessage(Message msg) {
-            // TODO Auto-generated method stub
-            super.handleMessage(msg);
-            switch (msg.what) {
-                case 1:
-                    pullList.refreshComplete();
-                    tbAdapter.notifyDataSetChanged();
-                    myList.setSelection(position - 1);
-                    isDown = false;
-                    break;
-                default:
-                    break;
-            }
-        }
-
-    };
 
     /**
      * 发送文字
