@@ -42,6 +42,7 @@ import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -51,6 +52,8 @@ public class ChatRecyclerAdapter extends
         RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private Context context;
     private List<ChatMessageBean> userList = new ArrayList<ChatMessageBean>();
+    private ArrayList<String> imageList = new ArrayList<String>();
+    private HashMap<Integer, Integer> imagePosition = new HashMap<Integer, Integer>();
     public static final int FROM_USER_MSG = 0;//接收消息类型
     public static final int TO_USER_MSG = 1;//发送消息类型
     public static final int FROM_USER_IMG = 2;//接收消息类型
@@ -103,8 +106,15 @@ public class ChatRecyclerAdapter extends
         this.isGif = isGif;
     }
 
+    public void setImageList(ArrayList<String> imageList) {
+        this.imageList = imageList;
+    }
+
+    public void setImagePosition(HashMap<Integer, Integer> imagePosition) {
+        this.imagePosition = imagePosition;
+    }
+
     /**
-     *
      * @param parent
      * @param viewType
      * @return
@@ -269,7 +279,6 @@ public class ChatRecyclerAdapter extends
     }
 
     /**
-     *
      * @param holder
      * @param position
      */
@@ -372,15 +381,9 @@ public class ChatRecyclerAdapter extends
                 public void onClick(View view) {
                     // TODO Auto-generated method stub
                     stopPlayVoice();
-                    ArrayList<String> mDatas = new ArrayList<String>();
-                    if (hasLocal) {
-                        mDatas.add(imageSrc);
-                    } else {
-                        mDatas.add(imageUrlSrc);
-                    }
                     Intent intent = new Intent(context, ImageViewActivity.class);
-                    intent.putStringArrayListExtra("images", mDatas);
-                    intent.putExtra("clickedIndex", 0);
+                    intent.putStringArrayListExtra("images", imageList);
+                    intent.putExtra("clickedIndex", imagePosition.get(position));
                     context.startActivity(intent);
                 }
 
@@ -595,15 +598,9 @@ public class ChatRecyclerAdapter extends
                 public void onClick(View view) {
                     // TODO Auto-generated method stub
                     stopPlayVoice();
-                    ArrayList<String> mDatas = new ArrayList<String>();
-                    if (hasLocal) {
-                        mDatas.add(imageSrc);
-                    } else {
-                        mDatas.add(imageUrlSrc);
-                    }
                     Intent intent = new Intent(context, ImageViewActivity.class);
-                    intent.putStringArrayListExtra("images", mDatas);
-                    intent.putExtra("clickedIndex", 0);
+                    intent.putStringArrayListExtra("images", imageList);
+                    intent.putExtra("clickedIndex", imagePosition.get(position));
                     context.startActivity(intent);
                 }
 

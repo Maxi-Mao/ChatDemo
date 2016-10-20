@@ -55,11 +55,6 @@ public class ChatListViewAdapter extends BaseAdapter {
     private List<ChatMessageBean> userList = new ArrayList<ChatMessageBean>();
     private ArrayList<String> imageList = new ArrayList<String>();
     private HashMap<Integer,Integer> imagePosition = new HashMap<Integer,Integer>();
-    //    public static int FROM_USER = 0;//接收消息类型
-//    public static int TO_USER = 1;//发送消息类型
-//    public static int TEXT_MSG = 0;//文字表情消息
-//    public static int VOICE_MSG = 1;//语音消息
-//    public static int IMG_MSG = 2;//图片消息
     public static final int FROM_USER_MSG = 0;//接收消息类型
     public static final int TO_USER_MSG = 1;//发送消息类型
     public static final int FROM_USER_IMG = 2;//接收消息类型
