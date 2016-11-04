@@ -26,7 +26,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.maxi.chatdemo.R;
-import com.maxi.chatdemo.adapter.ChatListViewAdapter;
 import com.maxi.chatdemo.adapter.DataAdapter;
 import com.maxi.chatdemo.adapter.ExpressionAdapter;
 import com.maxi.chatdemo.adapter.ExpressionPagerAdapter;
@@ -463,7 +462,7 @@ public abstract class BaseActivity extends AppCompatActivity {
                         File camFile = new File(camPicPath); // 图片文件路径
                         if (camFile.exists()) {
                             int size = ImageCheckoutUtil
-                                    .getImageSize(ChatListViewAdapter
+                                    .getImageSize(ImageCheckoutUtil
                                             .getLoacalBitmap(camPicPath));
                             if (size > IMAGE_SIZE) {
                                 showDialog(camPicPath);
@@ -491,8 +490,7 @@ public abstract class BaseActivity extends AppCompatActivity {
                     String path = FileSaveUtil.getPath(getApplicationContext(), uri);
                     mCurrentPhotoFile = new File(path); // 图片文件路径
                     if (mCurrentPhotoFile.exists()) {
-                        int size = ImageCheckoutUtil.getImageSize(ChatListViewAdapter
-                                .getLoacalBitmap(path));
+                        int size = ImageCheckoutUtil.getImageSize(ImageCheckoutUtil.getLoacalBitmap(path));
                         if (size > IMAGE_SIZE) {
                             showDialog(path);
                         } else {

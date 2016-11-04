@@ -4,8 +4,6 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.drawable.AnimationDrawable;
 import android.media.MediaPlayer;
 import android.os.Handler;
@@ -29,16 +27,12 @@ import com.maxi.chatdemo.common.ChatConst;
 import com.maxi.chatdemo.db.ChatMessageBean;
 import com.maxi.chatdemo.ui.ImageViewActivity;
 import com.maxi.chatdemo.utils.FileSaveUtil;
+import com.maxi.chatdemo.utils.ImageCheckoutUtil;
 import com.maxi.chatdemo.widget.BubbleImageView;
 import com.maxi.chatdemo.widget.GifTextView;
 import com.maxi.chatdemo.widget.MediaManager;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.math.BigDecimal;
 import java.text.DateFormat;
@@ -390,7 +384,7 @@ public class ChatListViewAdapter extends BaseAdapter {
             int res;
             res = R.drawable.chatfrom_bg_focused;
             if (hasLocal) {
-                holder.image_Msg.setLocalImageBitmap(getLoacalBitmap(imageSrc),
+                holder.image_Msg.setLocalImageBitmap(ImageCheckoutUtil.getLoacalBitmap(imageSrc),
                         res);
             } else {
                 holder.image_Msg.load(imageIconUrl, res, R.mipmap.cygs_cs);
@@ -607,7 +601,7 @@ public class ChatListViewAdapter extends BaseAdapter {
             int res;
             res = R.drawable.chatto_bg_focused;
             if (hasLocal) {
-                holder.image_Msg.setLocalImageBitmap(getLoacalBitmap(imageSrc),
+                holder.image_Msg.setLocalImageBitmap(ImageCheckoutUtil.getLoacalBitmap(imageSrc),
                         res);
             } else {
                 holder.image_Msg.load(imageIconUrl, res, R.mipmap.cygs_cs);
@@ -810,38 +804,6 @@ public class ChatListViewAdapter extends BaseAdapter {
             e.printStackTrace();
         }
         return showDay;
-    }
-
-    public static Bitmap getLoacalBitmap(String url) {
-        try {
-            ByteArrayOutputStream out;
-            FileInputStream fis = new FileInputStream(url);
-            BufferedInputStream bis = new BufferedInputStream(fis);
-            out = new ByteArrayOutputStream();
-            @SuppressWarnings("unused")
-            int hasRead = 0;
-            byte[] buffer = new byte[1024 * 2];
-            while ((hasRead = bis.read(buffer)) > 0) {
-                // 读出多少数据，向输出流中写入多少
-                out.write(buffer);
-                out.flush();
-            }
-            out.close();
-            fis.close();
-            bis.close();
-            byte[] data = out.toByteArray();
-            // 长宽减半
-            BitmapFactory.Options opts = new BitmapFactory.Options();
-            opts.inSampleSize = 3;
-            return BitmapFactory.decodeByteArray(data, 0, data.length, opts);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            return null;
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            return null;
-        }
     }
 
     public void stopPlayVoice() {

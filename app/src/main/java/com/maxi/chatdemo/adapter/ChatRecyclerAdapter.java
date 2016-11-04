@@ -23,12 +23,14 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.maxi.chatdemo.R;
 import com.maxi.chatdemo.common.ChatConst;
 import com.maxi.chatdemo.db.ChatMessageBean;
 import com.maxi.chatdemo.ui.ImageViewActivity;
 import com.maxi.chatdemo.utils.FileSaveUtil;
 import com.maxi.chatdemo.widget.BubbleImageView;
+import com.maxi.chatdemo.widget.CustomShapeTransformation;
 import com.maxi.chatdemo.widget.GifTextView;
 import com.maxi.chatdemo.widget.MediaManager;
 
@@ -356,8 +358,7 @@ public class ChatRecyclerAdapter extends
             holder.chat_time.setVisibility(View.VISIBLE);
             holder.chat_time.setText(showTime);
         }
-        if (isPicRefresh) {
-            holder.image_Msg.setImageBitmap(null);
+//        if (isPicRefresh) {
             final String imageSrc = tbub.getImageLocal() == null ? "" : tbub
                     .getImageLocal();
             final String imageUrlSrc = tbub.getImageUrl() == null ? "" : tbub
@@ -369,12 +370,7 @@ public class ChatRecyclerAdapter extends
                     && FileSaveUtil.isFileExists(file);
             int res;
             res = R.drawable.chatfrom_bg_focused;
-            if (hasLocal) {
-                holder.image_Msg.setLocalImageBitmap(getLoacalBitmap(imageSrc),
-                        res);
-            } else {
-                holder.image_Msg.load(imageIconUrl, res, R.mipmap.cygs_cs);
-            }
+            Glide.with(context).load(imageSrc).transform(new CustomShapeTransformation(context, res)).into(holder.image_Msg);
             holder.image_Msg.setOnClickListener(new View.OnClickListener() {
 
                 @Override
@@ -388,7 +384,7 @@ public class ChatRecyclerAdapter extends
                 }
 
             });
-        }
+//        }
 
     }
 
@@ -572,8 +568,7 @@ public class ChatRecyclerAdapter extends
             holder.chat_time.setText(showTime);
         }
 
-        if (isPicRefresh) {
-            holder.image_Msg.setImageBitmap(null);
+//        if (isPicRefresh) {
             holder.image_group.setVisibility(View.VISIBLE);
             final String imageSrc = tbub.getImageLocal() == null ? "" : tbub
                     .getImageLocal();
@@ -586,12 +581,7 @@ public class ChatRecyclerAdapter extends
                     && FileSaveUtil.isFileExists(file);
             int res;
             res = R.drawable.chatto_bg_focused;
-            if (hasLocal) {
-                holder.image_Msg.setLocalImageBitmap(getLoacalBitmap(imageSrc),
-                        res);
-            } else {
-                holder.image_Msg.load(imageIconUrl, res, R.mipmap.cygs_cs);
-            }
+            Glide.with(context).load(imageSrc).transform(new CustomShapeTransformation(context, res)).into(holder.image_Msg);
             holder.image_Msg.setOnClickListener(new View.OnClickListener() {
 
                 @Override
@@ -605,7 +595,7 @@ public class ChatRecyclerAdapter extends
                 }
 
             });
-        }
+//        }
     }
 
     private void toVoiceUserLayout(final ToUserVoiceViewHolder holder, final ChatMessageBean tbub, final int position) {
