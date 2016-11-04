@@ -16,7 +16,11 @@
 
 ![image](https://github.com/Maxi-Mao/ChatDemo/blob/master/ChatIMG/voice.gif)
 
-##注：RecyclerView仍在完善中，若急需使用建议使用ListView。
+##注：RecyclerView和ListView实现方式不同，些许功能不同，按需使用。
+
+（按二者缓存方式的特性，建议类似聊天这种局部更新频繁的界面使用RecyclerView。）
+
+ （RecyclerView现已完善，如有bug通知我再修复）
 
 ##16/10/15更新：
 
