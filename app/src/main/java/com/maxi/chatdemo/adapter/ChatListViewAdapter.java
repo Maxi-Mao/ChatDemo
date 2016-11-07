@@ -371,7 +371,7 @@ public class ChatListViewAdapter extends BaseAdapter {
             holder.chat_time.setText(showTime);
         }
         if (isPicRefresh) {
-            holder.image_Msg.setImageBitmap(null);
+//            holder.image_Msg.setImageBitmap(null);
             final String imageSrc = tbub.getImageLocal() == null ? "" : tbub
                     .getImageLocal();
             final String imageUrlSrc = tbub.getImageUrl() == null ? "" : tbub
@@ -587,7 +587,7 @@ public class ChatListViewAdapter extends BaseAdapter {
         }
 
         if (isPicRefresh) {
-            holder.image_Msg.setImageBitmap(null);
+//            holder.image_Msg.setImageBitmap(null);
             holder.image_group.setVisibility(View.VISIBLE);
             final String imageSrc = tbub.getImageLocal() == null ? "" : tbub
                     .getImageLocal();

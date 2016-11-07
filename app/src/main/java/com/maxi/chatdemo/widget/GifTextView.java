@@ -5,7 +5,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Handler;
-import android.os.Message;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.ImageSpan;
@@ -88,11 +87,12 @@ public class GifTextView extends EditText {
      *
      * @param inputStr
      */
-    private void parseText(String inputStr) {
+    private boolean parseText(String inputStr) {
         myText = inputStr;
 //		Pattern mPattern = Pattern.compile("\\[:..\\]|\\[:...\\]");
         Pattern mPattern = Pattern.compile("\\[[^\\]]+\\]");
         Matcher mMatcher = mPattern.matcher(inputStr);
+        boolean hasGif = false;
         while (mMatcher.find()) {
             String faceName = mMatcher.group();
             Integer faceId = null;
@@ -107,7 +107,9 @@ public class GifTextView extends EditText {
                     parseBmp(faceId, mMatcher.start(), mMatcher.end());
                 }
             }
+            hasGif = true;
         }
+        return hasGif;
     }
 
     /**
@@ -172,36 +174,98 @@ public class GifTextView extends EditText {
         this.handler = handler; // 获得UI的Handler
         this.isGif = isGif;
         spanInfoList = new ArrayList<SpanInfo>();
-        new Thread(new Runnable() {
-
-            @Override
-            public void run() {
-//				// TODO Auto-generated method stub
-                parseText(text); // 对String对象进行解析
-                // setEmojiText();
-                mStartHandler.sendEmptyMessage(0);
+//        ThreadPoolUtils.execute(new Runnable() {
+//
+//            @Override
+//            public void run() {
+////				// TODO Auto-generated method stub
+        if (parseText(text)) {// 对String对象进行解析
+//                    mStartHandler.sendEmptyMessage(0);
+            if (parseMessage(this)) {
+                startPost();
             }
-        }).start();
+        } else {
+//                    mStartHandler.sendEmptyMessage(1);
+            setText(myText);
+        }
+//            }
+//        });
     }
 
-    private StartHandler mStartHandler = new StartHandler(this);
+//    private StartHandler mStartHandler = new StartHandler(this);
+//
+//    public static class StartHandler extends Handler {
+//        private final WeakReference<GifTextView> mGifWeakReference;
+//
+//        public StartHandler(GifTextView gifTextView) {
+//            mGifWeakReference = new WeakReference<GifTextView>(gifTextView);
+//        }
+//
+//        @Override
+//        public void handleMessage(Message msg) {
+//            GifTextView gifTextView = mGifWeakReference.get();
+//            if (gifTextView != null) {
+//                if (msg.what == 0) {
+//                    gifTextView.startPost();
+//                } else if (msg.what == 1) {
+//                    gifTextView.setText(gifTextView.myText);
+//                }
+//            }
+//        }
+//    }
 
-    public static class StartHandler extends Handler {
-        private final WeakReference<GifTextView> mGifWeakReference;
+    public boolean parseMessage(GifTextView gifTextView) {
+        if (gifTextView.myText != null && !gifTextView.myText.equals("")) {
+            SpannableString sb = new SpannableString("" + gifTextView.myText); // 获得要显示的文本
+            int gifCount = 0;
+            SpanInfo info = null;
+            for (int i = 0; i < gifTextView.spanInfoList.size(); i++) { // for循环，处理显示多个图片的问题
+                info = gifTextView.spanInfoList.get(i);
+                if (info.mapList.size() > 1) {
+                            /*
+                             * gifCount用来区分是Gif还是BMP，若是gif gifCount>0
+							 * ,否则gifCount=0
+							 */
+                    gifCount++;
 
-        public StartHandler(GifTextView gifTextView) {
-            mGifWeakReference = new WeakReference<GifTextView>(gifTextView);
-        }
-
-        @Override
-        public void handleMessage(Message msg) {
-            GifTextView gifTextView = mGifWeakReference.get();
-            if (gifTextView != null) {
-                if (msg.what == 0) {
-                    gifTextView.startPost();
                 }
+                Bitmap bitmap = info.mapList
+                        .get(info.currentFrameIndex);
+                info.currentFrameIndex = (info.currentFrameIndex + 1)
+                        % (info.frameCount);
+                /**
+                 * currentFrameIndex
+                 * 用于控制当前应该显示的帧的序号，每次显示之后currentFrameIndex 应该加1
+                 * ，加到frameCount后再变成0循环显示
+                 */
+                int size = ScreenUtil.dip2px(gifTextView.getContext(), 30);
+                if (gifCount != 0) {
+                    bitmap = Bitmap.createScaledBitmap(bitmap, size,
+                            size, true);
+
+                } else {
+                    bitmap = Bitmap.createScaledBitmap(bitmap, size,
+                            size, true);
+                }
+                ImageSpan imageSpan = new ImageSpan(gifTextView.getContext(),
+                        bitmap);
+                if (info.end <= sb.length()) {
+                    sb.setSpan(imageSpan, info.start, info.end,
+                            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                } else {
+                    break;
+                }
+
+            }
+            // 对所有的图片对应的ImageSpan完成设置后，调用TextView的setText方法设置文本
+            gifTextView.setText(sb);
+            if (gifCount != 0) {
+                return true;
+            } else {
+                return false;
             }
         }
+        return false;
     }
 
     public TextRunnable rTextRunnable;
@@ -223,61 +287,16 @@ public class GifTextView extends EditText {
             // TODO Auto-generated method stub
             GifTextView gifTextView = mWeakReference.get();
             if (gifTextView != null) {
-                if (gifTextView.myText != null && !gifTextView.myText.equals("")) {
-                    SpannableString sb = new SpannableString("" + gifTextView.myText); // 获得要显示的文本
-                    int gifCount = 0;
-                    SpanInfo info = null;
-                    for (int i = 0; i < gifTextView.spanInfoList.size(); i++) { // for循环，处理显示多个图片的问题
-                        info = gifTextView.spanInfoList.get(i);
-                        if (info.mapList.size() > 1) {
-                            /*
-                             * gifCount用来区分是Gif还是BMP，若是gif gifCount>0
-							 * ,否则gifCount=0
-							 */
-                            gifCount++;
-
-                        }
-                        Bitmap bitmap = info.mapList
-                                .get(info.currentFrameIndex);
-                        info.currentFrameIndex = (info.currentFrameIndex + 1)
-                                % (info.frameCount);
-                        /**
-                         * currentFrameIndex
-                         * 用于控制当前应该显示的帧的序号，每次显示之后currentFrameIndex 应该加1
-                         * ，加到frameCount后再变成0循环显示
-                         */
-                        int size = ScreenUtil.dip2px(gifTextView.getContext(), 30);
-                        if (gifCount != 0) {
-                            bitmap = Bitmap.createScaledBitmap(bitmap, size,
-                                    size, true);
-
-                        } else {
-                            bitmap = Bitmap.createScaledBitmap(bitmap, size,
-                                    size, true);
-                        }
-                        ImageSpan imageSpan = new ImageSpan(gifTextView.getContext(),
-                                bitmap);
-                        if (info.end <= sb.length()) {
-                            sb.setSpan(imageSpan, info.start, info.end,
-                                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-                        } else {
-                            break;
-                        }
-
-                    }
-                    // 对所有的图片对应的ImageSpan完成设置后，调用TextView的setText方法设置文本
-                    gifTextView.setText(sb);
-                    /**
-                     * 这一步是为了节省内存而是用，即如果文本中只有静态图片没有动态图片，那么该线程就此终止，不会重复执行
-                     * 。而如果有动图，那么会一直执行
-                     */
-                    if (gifCount != 0) {
-                        gifTextView.handler.postDelayed(this, DELAYED);
-                    }
+                /**
+                 * 这一步是为了节省内存而是用，即如果文本中只有静态图片没有动态图片，那么该线程就此终止，不会重复执行
+                 * 。而如果有动图，那么会一直执行
+                 */
+                if (gifTextView.parseMessage(gifTextView)) {
+                    gifTextView.handler.postDelayed(this, DELAYED);
                 }
             }
         }
-
     }
 
 }
+
