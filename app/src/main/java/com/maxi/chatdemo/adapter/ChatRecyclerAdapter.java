@@ -370,7 +370,7 @@ public class ChatRecyclerAdapter extends
                     && FileSaveUtil.isFileExists(file);
             int res;
             res = R.drawable.chatfrom_bg_focused;
-            Glide.with(context).load(imageSrc).transform(new CustomShapeTransformation(context, res)).into(holder.image_Msg);
+            Glide.with(context).load(imageSrc).placeholder(R.mipmap.cygs_cs).transform(new CustomShapeTransformation(context, res)).into(holder.image_Msg);
             holder.image_Msg.setOnClickListener(new View.OnClickListener() {
 
                 @Override
@@ -549,8 +549,8 @@ public class ChatRecyclerAdapter extends
             default:
                 break;
         }
-        holder.headicon.setImageDrawable(context.getResources()
-                .getDrawable(R.mipmap.grzx_tx_s));
+//        holder.headicon.setImageDrawable(context.getResources()
+//                .getDrawable(R.mipmap.grzx_tx_s));
 
         /* time */
         if (position != 0) {
@@ -581,7 +581,7 @@ public class ChatRecyclerAdapter extends
                     && FileSaveUtil.isFileExists(file);
             int res;
             res = R.drawable.chatto_bg_focused;
-            Glide.with(context).load(imageSrc).transform(new CustomShapeTransformation(context, res)).into(holder.image_Msg);
+            Glide.with(context).load(imageSrc).placeholder(R.mipmap.cygs_cs).transform(new CustomShapeTransformation(context, res)).into(holder.image_Msg);
             holder.image_Msg.setOnClickListener(new View.OnClickListener() {
 
                 @Override

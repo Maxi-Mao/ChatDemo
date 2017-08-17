@@ -4,7 +4,8 @@ apply plugin: 'org.greenrobot.greendao'
 android {
     compileSdkVersion 23
     buildToolsVersion '23.0.1'
-
+    aaptOptions.cruncherEnabled = false
+    aaptOptions.useNewCruncher = false
     defaultConfig {
         applicationId "com.maxi.chatdemo"
         minSdkVersion 14
