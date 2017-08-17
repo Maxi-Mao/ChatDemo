@@ -25,6 +25,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/chat_time"
+        android:layout_margin="5dp"
         android:layout_toRightOf="@+id/tb_other_user_icon"
         android:orientation="horizontal">
 
