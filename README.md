@@ -57,6 +57,7 @@ RecyclerView适配器:ChatRecyclerAdapter
 * 支持图片发送，裁剪图片形状，支持图片点击进入大图观看，支持放大缩小等。
 * 根据图片大小等比例缩放，并压缩显示。
 * 支持语音发送，接收语音未读状态显示，语音录制为amr格式保存文件，语音发送仿微信。
+* 语音播放工具可以参考另一个项目：[android语音播放工具（自带缓存）](http://blog.csdn.net/omrapollo/article/details/78085730)
 * 若想录制mp3格式参考：[Android录制mp3格式](http://blog.csdn.net/omrapollo/article/details/50470659)
 * 没有录音权限则提示用户。实现方式参考：[Android录音权限被禁解决方案](http://blog.csdn.net/omrapollo/article/details/51150280)
 * 语音、图片支持三种状态：发送中、发送失败和发送成功（发送失败显示感叹号）。
