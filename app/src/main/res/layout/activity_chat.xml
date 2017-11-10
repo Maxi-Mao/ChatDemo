@@ -31,16 +31,6 @@
             android:paddingRight="10dp"
             android:paddingTop="5dp">
 
-            <ImageView
-                android:id="@+id/voice_iv"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:layout_marginLeft="5dp"
-                android:layout_marginRight="5dp"
-                android:background="@mipmap/voice_btn_normal"
-                android:padding="4dp" />
-
             <EditText
                 android:id="@+id/mess_et"
                 android:layout_width="0dp"
@@ -52,6 +42,16 @@
                 android:inputType="text"
                 android:padding="5dp"
                 android:textSize="16sp" />
+
+            <ImageView
+                android:id="@+id/voice_iv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"
+                android:background="@mipmap/voice_btn_normal"
+                android:padding="4dp" />
 
             <com.maxi.chatdemo.widget.AudioRecordButton
                 android:id="@+id/voice_btn"

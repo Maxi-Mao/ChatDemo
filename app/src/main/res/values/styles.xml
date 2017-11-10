@@ -7,6 +7,12 @@
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
     </style>
+
+    <style name="AppBarTheme" parent="android:Theme.Holo.Light">
+        <item name="android:windowFullscreen">false</item>
+        <item name="android:windowIsTranslucent">true</item>
+    </style>
+
     <style name="Theme_audioDialog" parent="@android:style/Theme.Dialog">
         <item name="android:windowBackground">@mipmap/tb_dialog_loading_bg</item>
         <item name="android:windowFrame">@null</item>

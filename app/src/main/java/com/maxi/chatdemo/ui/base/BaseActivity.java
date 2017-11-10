@@ -3,6 +3,8 @@ package com.maxi.chatdemo.ui.base;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.app.ActionBar;
+import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -59,7 +61,7 @@ import java.util.Map;
 /**
  * Created by Mao Jiqing on 2016/10/20.
  */
-public abstract class BaseActivity extends AppCompatActivity {
+public abstract class BaseActivity extends Activity {
     public PullToRefreshLayout pullList;
     public boolean isDown = false;
     private boolean CAN_WRITE_EXTERNAL_STORAGE = true;
@@ -153,6 +155,7 @@ public abstract class BaseActivity extends AppCompatActivity {
         emoji_group = (LinearLayout) findViewById(R.id.emoji_group);
         send_emoji_icon = (TextView) findViewById(R.id.send_emoji_icon);
         tbbv = (ChatBottomView) findViewById(R.id.other_lv);
+        initActionBar();
     }
 
     protected void init() {
@@ -359,6 +362,35 @@ public abstract class BaseActivity extends AppCompatActivity {
         loadRecords();
     }
 
+    private void initActionBar() {
+        if (getActionBar() == null) {
+            return;
+        }
+//        getActionBar().setBackgroundDrawable(getResources().getDrawable(R.drawable.ab_bg));//ActionBar的背景图片
+        getActionBar().setCustomView(R.layout.layout_action_bar);//ActionBar的自定义布局文件
+        getActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
+        View.OnClickListener listener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                switch (v.getId()) {
+                    case R.id.ivLeft:
+                        doLeft();
+                        break;
+                    case R.id.ivRight:
+                        doRight();
+                        break;
+                    case R.id.llRight:
+                        doRight();
+                        break;
+                }
+            }
+        };
+        getActionBar().getCustomView().findViewById(R.id.ivLeft).setOnClickListener(listener);
+        getActionBar().getCustomView().findViewById(R.id.ivRight).setOnClickListener(listener);
+        getActionBar().getCustomView().findViewById(R.id.llRight).setOnClickListener(listener);
+        ((TextView) getActionBar().getCustomView().findViewById(R.id.tvTitle)).setText(getTitle().toString());
+    }
+
     @TargetApi(23)
     protected void getPersimmions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -422,6 +454,48 @@ public abstract class BaseActivity extends AppCompatActivity {
             default:
                 super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
+    }
+
+    public void setTitle(CharSequence title) {
+        ((TextView) getActionBar().getCustomView().findViewById(R.id.tvTitle)).setText(title);
+    }
+
+    protected void showLeft(boolean flag) {
+        if (getActionBar() == null) {
+            return;
+        }
+        getActionBar().getCustomView().findViewById(R.id.ivLeft).setVisibility(flag ? View.VISIBLE : View.GONE);
+    }
+
+    protected void showRight(boolean flag) {
+        if (getActionBar() == null) {
+            return;
+        }
+        getActionBar().getCustomView().findViewById(R.id.llRight).setVisibility(flag ? View.VISIBLE : View.GONE);
+    }
+
+    protected void doLeft() {
+        finish();
+    }
+
+    protected void doRight() {
+
+    }
+
+    protected void setRight(int drawRes) {
+        if (getActionBar() == null) {
+            return;
+        }
+        ((ImageView) getActionBar().getCustomView().findViewById(R.id.ivRight)).setImageResource(drawRes);
+        getActionBar().getCustomView().findViewById(R.id.ivRight).setVisibility(View.VISIBLE);
+    }
+
+    protected void setRightText(String text){
+        if(getActionBar()==null){
+            return;
+        }
+        ((TextView)getActionBar().getCustomView().findViewById(R.id.tvRight)).setText(text);
+        getActionBar().getCustomView().findViewById(R.id.tvRight).setVisibility(View.VISIBLE);
     }
 
     /**

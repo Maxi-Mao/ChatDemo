@@ -1,5 +1,6 @@
 package com.maxi.chatdemo.ui;
 
+import android.app.ActionBar;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Handler;
@@ -58,6 +59,7 @@ public class RecyclerViewChatActivity extends BaseActivity {
 
     @Override
     protected void init() {
+        setTitle("RecyclerView");
         tbAdapter = new ChatRecyclerAdapter(this, tblist);
         wcLinearLayoutManger = new WrapContentLinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         myList.setLayoutManager(wcLinearLayoutManger);

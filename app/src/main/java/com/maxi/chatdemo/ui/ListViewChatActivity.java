@@ -53,6 +53,7 @@ public class ListViewChatActivity extends BaseActivity {
 
     @Override
     protected void init() {
+        setTitle("ListView");
         sendMessageHandler = new SendMessageHandler(this);
         tbAdapter = new ChatListViewAdapter(this);
         tbAdapter.setUserList(tblist);

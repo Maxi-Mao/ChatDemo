@@ -1,5 +1,6 @@
 package com.maxi.chatdemo.ui;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -11,7 +12,7 @@ import com.maxi.chatdemo.R;
 /**
  * Created by Mao Jiqing on 2016/10/10.
  */
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

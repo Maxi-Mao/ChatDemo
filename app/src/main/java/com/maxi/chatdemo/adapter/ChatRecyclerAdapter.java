@@ -370,8 +370,10 @@ public class ChatRecyclerAdapter extends
                     && FileSaveUtil.isFileExists(file);
             int res;
             res = R.drawable.chatfrom_bg_focused;
-            Glide.with(context).load(imageSrc).placeholder(R.mipmap.cygs_cs).transform(new CustomShapeTransformation(context, res)).into(holder.image_Msg);
-            holder.image_Msg.setOnClickListener(new View.OnClickListener() {
+//        Glide.with(context).load(imageSrc).transform(new CustomShapeTransformation(context, res)).into(holder.image_Msg);
+        Glide.with(context).load(imageSrc).placeholder(R.mipmap.cygs_cs).transform(new CustomShapeTransformation(context, res)).into(holder.image_Msg);
+
+        holder.image_Msg.setOnClickListener(new View.OnClickListener() {
 
                 @Override
                 public void onClick(View view) {
@@ -581,8 +583,10 @@ public class ChatRecyclerAdapter extends
                     && FileSaveUtil.isFileExists(file);
             int res;
             res = R.drawable.chatto_bg_focused;
-            Glide.with(context).load(imageSrc).placeholder(R.mipmap.cygs_cs).transform(new CustomShapeTransformation(context, res)).into(holder.image_Msg);
-            holder.image_Msg.setOnClickListener(new View.OnClickListener() {
+//        Glide.with(context).load(imageSrc).transform(new CustomShapeTransformation(context, res)).into(holder.image_Msg);
+        Glide.with(context).load(imageSrc).placeholder(R.mipmap.cygs_cs).transform(new CustomShapeTransformation(context, res)).into(holder.image_Msg);
+
+        holder.image_Msg.setOnClickListener(new View.OnClickListener() {
 
                 @Override
                 public void onClick(View view) {
