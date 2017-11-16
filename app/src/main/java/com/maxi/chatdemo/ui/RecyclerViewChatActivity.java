@@ -167,7 +167,7 @@ public class RecyclerViewChatActivity extends BaseActivity {
                 if (wcLinearLayoutManger != null) {
                     recyclerHeight = wcLinearLayoutManger.getRecyclerHeight();
                 }
-                if (heightDifference == bottomStatusHeight) {
+                if (heightDifference == 0 || heightDifference == bottomStatusHeight) {
                     needToScrollView.scrollTo(0, 0);
                 } else {
                     if (heightDifference < recyclerHeight) {

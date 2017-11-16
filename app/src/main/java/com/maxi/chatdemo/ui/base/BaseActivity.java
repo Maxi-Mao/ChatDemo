@@ -356,7 +356,7 @@ public abstract class BaseActivity extends Activity {
 
         });
 //        controlKeyboardLayout(activityRootView, pullList);
-        bottomStatusHeight = ScreenUtil.getBottomStatusHeight(this);
+        bottomStatusHeight = ScreenUtil.getNavigationBarHeight(this);
         //加载本地聊天记录
         page = (int) mChatDbManager.getPages(number);
         loadRecords();
